@@ -1,0 +1,29 @@
+{
+  "name": "orlybot2",
+  "version": "2.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p .",
+    "start": "node -r ./paths.js dist/index.js",
+    "bot": "nodemon -e ts -w src -x 'yarn build && yarn start'"
+  },
+  "dependencies": {
+    "@babel/core": "^7.8.3",
+    "@babel/node": "^7.8.3",
+    "@babel/preset-env": "^7.8.3",
+    "babel-eslint": "^10.0.3",
+    "decode-html": "^2.0.0",
+    "dotenv": "^8.2.0",
+    "node-fetch": "^2.6.0",
+    "nodemon": "^2.0.2",
+    "tsconfig-paths": "^3.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^13.1.6",
+    "@types/node-fetch": "^2.5.4",
+    "awesome-typescript-loader": "^5.2.1",
+    "prettier": "^1.19.1",
+    "typescript": "^3.7.4"
+  }
+}

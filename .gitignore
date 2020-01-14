@@ -1,0 +1,8 @@
+.env
+.DS_Store
+node_modules/
+data/*
+seen
+dist/
+.vscode/taskmarks.json
+yarn-error.log
