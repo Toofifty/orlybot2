@@ -7,40 +7,60 @@ import {
     ConversationsInfoArguments,
 } from '@slack/web-api';
 import { loginfo, logdebug } from './log';
-import User from './model/user';
+import User from 'core/model/user';
+import { sleep } from 'core/util';
 import Message from './model/message';
+import { ID } from './model/types';
 
 class Bot {
+    public id: ID;
+    public name: string;
     private web: WebClient;
     private rtm: RTMClient;
 
     public constructor() {
         this.web = new WebClient(process.env.SLACK_TOKEN);
         this.rtm = new RTMClient(process.env.SLACK_TOKEN);
-        this.rtm.start();
-        loginfo('Connected to Slack');
-        this.checkIn();
+        // this.checkIn();
         this.registerMessageListener();
+        this.rtm.start().then(({ self }: any) => {
+            this.id = self.id;
+            this.name = self.name;
+        });
+        loginfo('Connected to Slack');
     }
 
-    private checkIn(): void {
+    private async checkIn(): Promise<void> {
+        await sleep(2000);
         process.env.SLACK_ADMINS.split(',')
             .filter(Boolean)
             .forEach(async adminId => {
                 const adminUser = await User.find(adminId);
-                await adminUser.ephemeral('Checking in!');
+                await adminUser.message('Checking in!');
                 logdebug('Checked in with', adminUser.slackName);
             });
     }
 
     private async registerMessageListener(): Promise<void> {
-        this.rtm.on('message', data => {
-            console.log(Message.from(data));
+        this.rtm.on('message', async data => {
+            // console.log(data);
+            const message = await Message.from(data);
+            if (!message.isUserMessage) return;
+            this.rtm.sendTyping(message.channel.id);
+            message.reply('reply!');
+            console.log(message);
         });
     }
 
-    public _message(options: ChatPostMessageArguments) {
-        return this.web.chat.postMessage(options);
+    public async _message(options: ChatPostMessageArguments) {
+        try {
+            // attempt to use rtm if possible
+            const { channel, as_user, text, ...nonRTM } = options;
+            if (Object.keys(nonRTM).length === 0) {
+                return await this.rtm.sendMessage(text, channel);
+            }
+        } catch {}
+        return await this.web.chat.postMessage(options);
     }
 
     public _ephemeral(options: ChatPostEphemeralArguments) {

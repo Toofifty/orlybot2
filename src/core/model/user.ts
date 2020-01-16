@@ -1,19 +1,31 @@
-import { ID } from './types';
-import BaseModel from './base-model';
 import bot from 'core/bot';
-import { camel } from 'core/util/case';
+import { camel } from 'core/util';
+import { ID } from 'core/model/types';
+import BaseModel from 'core/model/base-model';
+import Store from 'core/store';
+
+const store = Store.create('users', {} as Record<ID, Partial<User>>);
 
 export default class User extends BaseModel {
     id: ID;
     name: string;
-    profile: { displayName: string };
+    profile: {
+        displayName: string;
+    };
 
-    static async from(data: any) {
+    static from(data: any) {
         return super.from(data) as Promise<User>;
     }
 
-    static async find(key: string) {
-        return this.from(camel(await bot._fetchUser({ user: key })));
+    static async find(id: ID, refetch?: boolean): Promise<User> {
+        if (refetch || !store.get([id])) {
+            const user = await this.from(
+                camel(await bot._fetchUser({ user: id }))
+            );
+            store.commit([id], user.serialize());
+            return user;
+        }
+        return await this.from(store.get([id]));
     }
 
     public get tag() {
@@ -22,6 +34,16 @@ export default class User extends BaseModel {
 
     public get slackName() {
         return `@${this.profile.displayName}`;
+    }
+
+    public serialize() {
+        return {
+            id: this.id,
+            name: this.name,
+            profile: {
+                displayName: this.profile.displayName,
+            },
+        };
     }
 
     public message(text: string) {
