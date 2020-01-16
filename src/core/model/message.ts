@@ -12,14 +12,14 @@ enum MessageSubtype {
 }
 
 export default class Message extends BaseModel {
-    type: MessageType;
-    subtype?: MessageSubtype;
-    text: string;
-    user: User;
-    channel: Channel;
-    time: Date;
+    public type: MessageType;
+    public subtype?: MessageSubtype;
+    public text: string;
+    public user: User;
+    public channel: Channel;
+    public time: Date;
 
-    static from(data: any) {
+    public static from(data: any) {
         return super.from(data) as Promise<Message>;
     }
 

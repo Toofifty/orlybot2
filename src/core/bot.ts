@@ -43,7 +43,6 @@ class Bot {
 
     private async registerMessageListener(): Promise<void> {
         this.rtm.on('message', async data => {
-            // console.log(data);
             const message = await Message.from(data);
             if (!message.isUserMessage) return;
             this.rtm.sendTyping(message.channel.id);
@@ -67,7 +66,7 @@ class Bot {
         return this.web.chat.postEphemeral(options);
     }
 
-    public async _fetchUser(options: UsersInfoArguments): Promise<any> {
+    public async _fetchUser(options: UsersInfoArguments) {
         return ((await this.web.users.info(options)) as any).user;
     }
 

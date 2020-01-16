@@ -7,17 +7,17 @@ import Store from 'core/store';
 const store = Store.create('users', {} as Record<ID, Partial<User>>);
 
 export default class User extends BaseModel {
-    id: ID;
-    name: string;
-    profile: {
+    public id: ID;
+    public name: string;
+    public profile: {
         displayName: string;
     };
 
-    static from(data: any) {
+    public static from(data: any) {
         return super.from(data) as Promise<User>;
     }
 
-    static async find(id: ID, refetch?: boolean): Promise<User> {
+    public static async find(id: ID, refetch?: boolean): Promise<User> {
         if (refetch || !store.get([id])) {
             const user = await this.from(
                 camel(await bot._fetchUser({ user: id }))

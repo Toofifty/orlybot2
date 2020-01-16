@@ -7,19 +7,19 @@ import Store from 'core/store';
 const store = Store.create('channels', {} as Record<ID, Partial<Channel>>);
 
 export default class Channel extends BaseModel {
-    id: ID;
-    name: string;
-    isChannel: boolean;
-    isGroup: boolean;
-    isIm: boolean;
-    isMember: boolean;
-    isPrivate: boolean;
+    public id: ID;
+    public name: string;
+    public isChannel: boolean;
+    public isGroup: boolean;
+    public isIm: boolean;
+    public isMember: boolean;
+    public isPrivate: boolean;
 
-    static from(data: any) {
+    public static from(data: any) {
         return super.from(data) as Promise<Channel>;
     }
 
-    static async find(id: ID, refetch?: boolean): Promise<Channel> {
+    public static async find(id: ID, refetch?: boolean): Promise<Channel> {
         if (refetch || !store.get([id])) {
             const channel = await this.from(
                 camel(await bot._fetchChannel({ channel: id }))
