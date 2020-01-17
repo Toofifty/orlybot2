@@ -1,4 +1,6 @@
-export type CommandAction = () => void;
+import Message from 'core/model/message';
+
+export type CommandAction = (message: Message, args: string[]) => any;
 
 export type CommandArgument = {
     name: string;

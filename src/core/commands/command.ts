@@ -1,3 +1,5 @@
+import Message from 'core/model/message';
+import { arghelp } from 'core/util';
 import { CommandAction, CommandArgument } from './types';
 import registry from './registry';
 
@@ -47,7 +49,16 @@ export default class Command {
         return this.set({ permission: CommandPermission.ADMIN });
     }
 
-    public run() {
-        return this.action();
+    public run(message: Message) {
+        return this.action(message, message.lastTokens);
+    }
+
+    public get help() {
+        return [
+            this.keyword,
+            ...this.arguments.map(arghelp),
+            '-',
+            this.description,
+        ].join(' ');
     }
 }

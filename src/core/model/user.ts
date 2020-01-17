@@ -12,9 +12,15 @@ export default class User extends BaseModel {
     public profile: {
         displayName: string;
     };
+    public isAdmin: boolean;
 
     public static from(data: any) {
         return super.from(data) as Promise<User>;
+    }
+
+    protected async finalise(data: any) {
+        this.isAdmin = process.env.SLACK_ADMINS.split(',').includes(this.id);
+        return this;
     }
 
     public static async find(id: ID, refetch?: boolean): Promise<User> {
@@ -61,5 +67,9 @@ export default class User extends BaseModel {
             as_user: true,
             text,
         });
+    }
+
+    public toString() {
+        return this.tag;
     }
 }

@@ -7,12 +7,12 @@ class Registry {
         this.commands[command.keyword] = command;
     }
 
-    public contains(keyword: string) {
-        return !!this.commands[keyword];
+    public find(keyword: string) {
+        return this.commands[keyword];
     }
 
-    public execute(keyword: string) {
-        return this.commands[keyword].run();
+    public all() {
+        return Object.values(this.commands);
     }
 }
 

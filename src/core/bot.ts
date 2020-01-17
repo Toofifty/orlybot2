@@ -11,6 +11,7 @@ import User from 'core/model/user';
 import { sleep } from 'core/util';
 import Message from './model/message';
 import { ID } from './model/types';
+import CommandRunner from './commands/runner';
 
 class Bot {
     public id: ID;
@@ -46,8 +47,9 @@ class Bot {
             const message = await Message.from(data);
             if (!message.isUserMessage) return;
             this.rtm.sendTyping(message.channel.id);
-            message.reply('reply!');
-            console.log(message);
+            loginfo(message.toString());
+
+            CommandRunner.handle(message);
         });
     }
 

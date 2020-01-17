@@ -10,7 +10,7 @@ export default class BaseModel {
         return this;
     }
 
-    public async finalise(data: any) {
+    protected async finalise(data: any) {
         return this;
     }
 }

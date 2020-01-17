@@ -30,8 +30,8 @@ export default class Channel extends BaseModel {
         return await this.from(store.get([id]));
     }
 
-    public get tag() {
-        return `#${this.name}`;
+    public get tag(): string | undefined {
+        return this.name && `#${this.name}`;
     }
 
     public serialize() {
