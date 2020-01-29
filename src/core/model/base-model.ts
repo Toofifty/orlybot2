@@ -1,5 +1,5 @@
 export default class BaseModel {
-    isModel: true;
+    isModel = true;
 
     static async from(data: any): Promise<BaseModel> {
         return data.isModel ? data : await new this().set(data).finalise(data);

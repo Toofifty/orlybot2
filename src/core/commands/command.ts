@@ -20,6 +20,7 @@ export default class Command {
     public phrase: boolean;
     public parent?: Command;
     public subcommands: Record<string, Command> = {};
+    public hidden?: boolean;
 
     public static create(keyword: string, action?: CommandAction) {
         const command = new this(keyword, action);
@@ -74,6 +75,10 @@ export default class Command {
         return this;
     }
 
+    public hide(hidden: boolean = true) {
+        return this.set({ hidden });
+    }
+
     public matches(message: Message): boolean {
         if (this.phrase) {
             return message.text.includes(this.keyword);
@@ -97,9 +102,9 @@ export default class Command {
         );
         if (typeof result === 'string') {
             if (this.permission !== CommandPermission.USER) {
-                message.replyEphemeral(result);
+                await message.replyEphemeral(result);
             } else {
-                message.reply(result);
+                await message.reply(result);
             }
         }
     }
@@ -112,6 +117,7 @@ export default class Command {
     }
 
     public get help(): string[] {
+        if (this.hidden) return [];
         return [
             [
                 this.keywords,

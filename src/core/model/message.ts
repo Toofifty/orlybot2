@@ -23,7 +23,8 @@ export type SavedMessage = {
     originalChannel: string;
     aliasedUser?: string;
     aliasedChannel?: string;
-    ts: string;
+    originalText: string;
+    ts: number;
 };
 
 export default class Message extends BaseModel {
@@ -36,26 +37,35 @@ export default class Message extends BaseModel {
     public aliasedChannel?: Channel;
     public time: Date;
 
+    private originalText: string;
+
     public static from(data: any) {
         return super.from(data) as Promise<Message>;
     }
 
     protected async finalise(data: any) {
-        this.user = await User.find(data.user);
-        this.channel = await Channel.find(data.channel);
-        this.time = new Date(data.ts.split('.')[0] * 1000);
+        // prevent re-finalising for sub-messages
+        if (this.user.isModel)
+            throw new Error('Tried to create model from another');
 
-        if (CHANNEL_ALIAS_REGEX.test(this.text)) {
+        this.user = await User.find(data.originalUser ?? data.user);
+        this.channel = await Channel.find(data.originalChannel ?? data.channel);
+        this.time = new Date(
+            typeof data.ts === 'string' ? data.ts.split('.')[0] * 1000 : data.ts
+        );
+        this.originalText = this.text;
+
+        if (CHANNEL_ALIAS_REGEX.test(this.originalText)) {
             if (!this.user.isAdmin) {
                 this.replyError("You don't have permission to alias a channel");
                 return this;
             }
             const [match, channelId] = this.text.match(CHANNEL_ALIAS_REGEX);
             this.aliasedChannel = await Channel.find(channelId);
-            this.text = this.text.replace(match, '');
+            this.text = this.originalText.replace(match, '');
         }
 
-        if (USER_ALIAS_REGEX.test(this.text)) {
+        if (USER_ALIAS_REGEX.test(this.originalText)) {
             if (!this.user.isAdmin) {
                 this.replyError("You don't have permission to alias a user");
                 return this;
@@ -154,7 +164,9 @@ export default class Message extends BaseModel {
         }
         return await Promise.all(
             this.terms.map(async term =>
-                (await Message.from(this)).set({ text: term })
+                (await Message.from(this.serialize())).set({
+                    text: term.join(' '),
+                })
             )
         );
     }
@@ -168,7 +180,8 @@ export default class Message extends BaseModel {
             originalChannel: this.originalChannel.id,
             aliasedUser: this.aliasedUser?.id,
             aliasedChannel: this.aliasedChannel?.id,
-            ts: this.time.toISOString(),
+            originalText: this.originalText,
+            ts: Number(this.time),
         };
     }
 }

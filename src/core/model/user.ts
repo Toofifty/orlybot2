@@ -5,6 +5,8 @@ import DbModel from 'core/model/db-model';
 import db from 'core/db';
 import Message, { SavedMessage } from './message';
 
+const USER_TAG_REGEX = /<@(\w{9})(?:\|\w+)?>*/;
+
 export default class User extends DbModel {
     public id: ID;
     public name: string;
@@ -13,6 +15,7 @@ export default class User extends DbModel {
     };
     public isAdmin: boolean;
     public messages?: SavedMessage[];
+    public meta: Record<string, any> = {};
 
     public static from(data: any) {
         return super.from(data) as Promise<User>;
@@ -24,6 +27,10 @@ export default class User extends DbModel {
     }
 
     public static async find(id: ID, refetch?: boolean): Promise<User> {
+        if (USER_TAG_REGEX.test(id)) {
+            id = id.match(USER_TAG_REGEX)[0];
+        }
+
         const dbUser = await db.get(`user:${id}`);
         if (refetch || !dbUser) {
             const user = await this.from(
@@ -46,12 +53,13 @@ export default class User extends DbModel {
     public serialize() {
         return {
             _id: `user:${this.id}`,
-            _rev: this._rev,
+            ...(this._rev ? { _rev: this._rev } : {}),
             name: this.name,
             profile: {
                 displayName: this.profile.displayName,
             },
             messages: this.messages,
+            meta: this.meta,
         };
     }
 

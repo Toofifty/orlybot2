@@ -1,14 +1,17 @@
 import Message from 'core/model/message';
 import Command from './command';
 import registry from './registry';
-import { loginfo } from 'core/log';
 
 export default class CommandRunner {
     private message: Message;
     private command: Command;
 
     public static async handle(parentMessage: Message) {
-        await Promise.all((await parentMessage.all()).map(this.handleSingle));
+        // run through submessages in order
+        await (await parentMessage.all()).reduce(async (promise, message) => {
+            await promise;
+            return this.handleSingle(message);
+        }, Promise.resolve());
     }
 
     private static async handleSingle(message: Message) {
@@ -25,7 +28,8 @@ export default class CommandRunner {
 
     public resolveCommand(message: Message) {
         this.command =
-            registry.find(message.firstToken) ?? registry.findMatch(message);
+            registry.find(message.firstToken.toLowerCase()) ??
+            registry.findMatch(message);
     }
 
     public get isNoOp(): boolean {

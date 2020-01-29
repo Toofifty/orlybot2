@@ -6,7 +6,7 @@ import {
     UsersInfoArguments,
     ConversationsInfoArguments,
 } from '@slack/web-api';
-import { loginfo, logdebug } from './log';
+import { loginfo, logdebug, logerror } from './log';
 import User from 'core/model/user';
 import { sleep } from 'core/util';
 import Message from './model/message';
@@ -69,7 +69,12 @@ class Bot {
     }
 
     public async _fetchUser(options: UsersInfoArguments) {
-        return ((await this.web.users.info(options)) as any).user;
+        try {
+            return ((await this.web.users.info(options)) as any).user;
+        } catch (e) {
+            logerror('Failed to fetch user', options);
+            return undefined;
+        }
     }
 
     public async _fetchChannel(options: ConversationsInfoArguments) {

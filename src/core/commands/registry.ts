@@ -15,9 +15,14 @@ class Registry {
         const disabled = await loadDisabledCommands;
         this.allCommands[command.keyword] = command;
         if (!disabled.includes(command.keyword)) {
-            this.commands[command.keyword] = command;
+            this.commands[command.keyword.toLowerCase()] = command;
         }
         return command;
+    }
+
+    public unregister(keyword: string) {
+        delete this.commands[keyword.toLowerCase()];
+        delete this.allCommands[keyword.toLowerCase()];
     }
 
     public find(keyword: string) {
@@ -39,11 +44,12 @@ class Registry {
     }
 
     public enable(keyword: string) {
+        keyword = keyword.toLowerCase();
         if (keyword in this.commands) {
-            throw new Error(`\`${keyword}\` is already enabled`);
+            throw new Error(`${keyword} is already enabled`);
         }
         if (!(keyword in this.allCommands)) {
-            throw new Error(`There is no command \`${keyword}\``);
+            throw new Error(`There is no command ${keyword}`);
         }
         this.commands[keyword] = this.allCommands[keyword];
         db.update('disabled-commands', obj => ({
@@ -53,11 +59,12 @@ class Registry {
     }
 
     public disable(keyword: string) {
+        keyword = keyword.toLowerCase();
         if (!(keyword in this.allCommands)) {
-            throw new Error(`There is no command \`${keyword}\``);
+            throw new Error(`There is no command ${keyword}`);
         }
         if (!(keyword in this.commands)) {
-            throw new Error(`\`${keyword}\` is already disabled`);
+            throw new Error(`${keyword} is already disabled`);
         }
         delete this.commands[keyword];
         db.update('disabled-commands', obj => ({
@@ -68,7 +75,4 @@ class Registry {
 }
 
 const registry = new Registry();
-
-export const aliasOf = keyword => registry.find(keyword).run;
-
 export default registry;

@@ -15,7 +15,14 @@ export default class DbModel extends BaseModel {
         throw new Error('Unimplemented serialize');
     }
 
-    public save() {
-        return db.put(this.serialize());
+    public async save() {
+        const data: any = this.serialize();
+        const stored = await db.get(data._id);
+
+        if (!stored) {
+            await db.put(data);
+        } else {
+            await db.update(data._id, obj => ({ ...obj, ...data }));
+        }
     }
 }

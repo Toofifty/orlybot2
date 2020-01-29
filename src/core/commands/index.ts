@@ -1,2 +1,2 @@
 export { default as Command } from './command';
-export { default as registry, aliasOf } from './registry';
+export { default as registry } from './registry';
