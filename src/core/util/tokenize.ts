@@ -4,7 +4,7 @@ const TOKEN_DELIMETERS = ["'", '"', '`', '“', '“'];
 
 /**
  * Tokenize a string, splitting on spaces but keeping
- * quoted items together
+ * quoted items together. Don't ask how it works.
  */
 const tokenize = (str: string): string[] =>
     Array.from(str.trim()).reduce(

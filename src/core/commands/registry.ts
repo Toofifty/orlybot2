@@ -8,9 +8,23 @@ const loadDisabledCommands = db
     .catch(() => []);
 
 class Registry {
+    /**
+     * Map of enabled commands.
+     */
     private commands: Record<string, Command> = {};
+
+    /**
+     * Map of all commands; both enabled and disabled.
+     */
     private allCommands: Record<string, Command> = {};
 
+    /**
+     * Register a command.
+     *
+     * If the command is in the disabled list loaded from
+     * the database, it won't be added to the map of
+     * enabled commands.
+     */
     public async register(command: Command) {
         const disabled = await loadDisabledCommands;
         this.allCommands[command.keyword] = command;
@@ -20,29 +34,53 @@ class Registry {
         return command;
     }
 
+    /**
+     * Unregister a command.
+     *
+     * Really only used for temporary commands or listeners.
+     */
     public unregister(keyword: string) {
         delete this.commands[keyword.toLowerCase()];
         delete this.allCommands[keyword.toLowerCase()];
     }
 
+    /**
+     * Get a command by main keyword. (first pass)
+     */
     public find(keyword: string) {
         return this.commands[keyword];
     }
 
+    /**
+     * Get a command by alias or full-text match. (second pass)
+     */
     public findMatch(message: Message) {
         return this.all().find(command => command.matches(message));
     }
 
+    /**
+     * Get all enabled commands. Includes hidden and permission
+     * restricted commands.
+     */
     public all() {
         return Object.values(this.commands);
     }
 
+    /**
+     * Get all disabled commands.
+     */
     public allDisabled() {
         return Object.values(this.allCommands).filter(
             cmd => !Object.values(this.commands).includes(cmd)
         );
     }
 
+    /**
+     * Enable a command by keyword.
+     *
+     * Adds the command to the enabled command list and updates
+     * the in-database disabled list to remove the keyword.
+     */
     public enable(keyword: string) {
         keyword = keyword.toLowerCase();
         if (keyword in this.commands) {
@@ -58,6 +96,12 @@ class Registry {
         }));
     }
 
+    /**
+     * Enable a command by keyword.
+     *
+     * Removes the command from the enabled command list and updates
+     * the in-database disabled list to append the keyword.
+     */
     public disable(keyword: string) {
         keyword = keyword.toLowerCase();
         if (!(keyword in this.allCommands)) {
@@ -74,5 +118,8 @@ class Registry {
     }
 }
 
+/**
+ * Command registry for managing and matching commands.
+ */
 const registry = new Registry();
 export default registry;

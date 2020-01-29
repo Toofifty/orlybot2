@@ -1,3 +1,7 @@
+/**
+ * Replace all keys in an object with the value of the original
+ * key passed into the predicate `func`.
+ */
 const replaceKeys = (func: (value: string) => string) => <T>(obj: T) =>
     JSON.parse(
         JSON.stringify(obj ?? null).replace(
@@ -6,6 +10,9 @@ const replaceKeys = (func: (value: string) => string) => <T>(obj: T) =>
         )
     );
 
+/**
+ * Replace all keys in an object with camelCase.
+ */
 export const camel = replaceKeys(str =>
     str
         .toLowerCase()

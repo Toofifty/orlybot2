@@ -1,6 +1,7 @@
 import { CommandArgument } from 'core/commands/types';
+
 /**
- * Stringify an argument for printing in the help command
+ * Stringify an argument for printing in the help command.
  */
 const arghelp = ({ required, name, def }: CommandArgument) =>
     `${required ? '<' : '['}` +

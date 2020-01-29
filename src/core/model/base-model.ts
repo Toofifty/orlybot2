@@ -1,4 +1,8 @@
 export default class BaseModel {
+    /**
+     * If this field is available at runtime, then we know
+     * this is already a model (not database or API data).
+     */
     isModel = true;
 
     static async from(data: any): Promise<BaseModel> {
