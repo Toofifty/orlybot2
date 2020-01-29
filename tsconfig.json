@@ -14,6 +14,7 @@
         "outDir": "dist",
         "module": "commonjs",
         "allowJs": true,
+        "esModuleInterop": true,
         "paths": {
             "core": ["./core"],
             "modules": ["./modules"]

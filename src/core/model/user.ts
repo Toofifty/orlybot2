@@ -1,18 +1,18 @@
 import bot from 'core/bot';
 import { camel } from 'core/util';
 import { ID } from 'core/model/types';
-import BaseModel from 'core/model/base-model';
-import Store from 'core/store';
+import DbModel from 'core/model/db-model';
+import db from 'core/db';
+import Message, { SavedMessage } from './message';
 
-const store = Store.create('users', {} as Record<ID, Partial<User>>);
-
-export default class User extends BaseModel {
+export default class User extends DbModel {
     public id: ID;
     public name: string;
     public profile: {
         displayName: string;
     };
     public isAdmin: boolean;
+    public messages?: SavedMessage[];
 
     public static from(data: any) {
         return super.from(data) as Promise<User>;
@@ -24,14 +24,15 @@ export default class User extends BaseModel {
     }
 
     public static async find(id: ID, refetch?: boolean): Promise<User> {
-        if (refetch || !store.get([id])) {
+        const dbUser = await db.get(`user:${id}`);
+        if (refetch || !dbUser) {
             const user = await this.from(
                 camel(await bot._fetchUser({ user: id }))
             );
-            store.commit([id], user.serialize());
+            await db.put(user.serialize());
             return user;
         }
-        return await this.from(store.get([id]));
+        return await this.from(dbUser);
     }
 
     public get tag() {
@@ -44,11 +45,13 @@ export default class User extends BaseModel {
 
     public serialize() {
         return {
-            id: this.id,
+            _id: `user:${this.id}`,
+            _rev: this._rev,
             name: this.name,
             profile: {
                 displayName: this.profile.displayName,
             },
+            messages: this.messages,
         };
     }
 
@@ -67,6 +70,12 @@ export default class User extends BaseModel {
             as_user: true,
             text,
         });
+    }
+
+    public said(message: Message) {
+        if (!this.messages) this.messages = [];
+        this.messages.push(message.serialize());
+        this.save();
     }
 
     public toString() {

@@ -1,12 +1,10 @@
 import bot from 'core/bot';
 import { camel } from 'core/util';
-import BaseModel from 'core/model/base-model';
 import { ID } from 'core/model/types';
-import Store from 'core/store';
+import DbModel from 'core/model/db-model';
+import db from 'core/db';
 
-const store = Store.create('channels', {} as Record<ID, Partial<Channel>>);
-
-export default class Channel extends BaseModel {
+export default class Channel extends DbModel {
     public id: ID;
     public name: string;
     public isChannel: boolean;
@@ -20,14 +18,15 @@ export default class Channel extends BaseModel {
     }
 
     public static async find(id: ID, refetch?: boolean): Promise<Channel> {
-        if (refetch || !store.get([id])) {
+        const dbChannel = await db.get(`channel:${id}`);
+        if (refetch || !dbChannel) {
             const channel = await this.from(
                 camel(await bot._fetchChannel({ channel: id }))
             );
-            store.commit([id], channel.serialize());
+            await db.put(channel.serialize());
             return channel;
         }
-        return await this.from(store.get([id]));
+        return await this.from(dbChannel);
     }
 
     public get tag(): string | undefined {
@@ -36,7 +35,8 @@ export default class Channel extends BaseModel {
 
     public serialize() {
         return {
-            id: this.id,
+            _id: `channel:${this.id}`,
+            _rev: this._rev,
             name: this.name,
             isChannel: this.isChannel,
             isGroup: this.isGroup,

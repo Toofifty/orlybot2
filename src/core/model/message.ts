@@ -15,6 +15,17 @@ enum MessageSubtype {
     GROUP_JOIN = 'group_join',
 }
 
+export type SavedMessage = {
+    type: MessageType;
+    subtype?: MessageSubtype;
+    text: string;
+    originalUser: string;
+    originalChannel: string;
+    aliasedUser?: string;
+    aliasedChannel?: string;
+    ts: string;
+};
+
 export default class Message extends BaseModel {
     public type: MessageType;
     public subtype?: MessageSubtype;
@@ -32,7 +43,7 @@ export default class Message extends BaseModel {
     protected async finalise(data: any) {
         this.user = await User.find(data.user);
         this.channel = await Channel.find(data.channel);
-        this.time = new Date(data.ts.split('.')[0]);
+        this.time = new Date(data.ts.split('.')[0] * 1000);
 
         if (CHANNEL_ALIAS_REGEX.test(this.text)) {
             if (!this.user.isAdmin) {
@@ -53,6 +64,8 @@ export default class Message extends BaseModel {
             this.aliasedUser = await User.find(userId);
             this.text = this.text.replace(match, '');
         }
+
+        this.user.said(this);
 
         return this;
     }
@@ -144,5 +157,18 @@ export default class Message extends BaseModel {
                 (await Message.from(this)).set({ text: term })
             )
         );
+    }
+
+    public serialize(): SavedMessage {
+        return {
+            type: this.type,
+            subtype: this.subtype,
+            text: this.text,
+            originalUser: this.originalUser.id,
+            originalChannel: this.originalChannel.id,
+            aliasedUser: this.aliasedUser?.id,
+            aliasedChannel: this.aliasedChannel?.id,
+            ts: this.time.toISOString(),
+        };
     }
 }
