@@ -1,4 +1,5 @@
 import PouchDB from 'pouchdb-node';
+import { logerror } from './log';
 
 class Database {
     private db: PouchDB.Database;
@@ -13,6 +14,14 @@ class Database {
 
     public async put(data: any) {
         return this.db.put(data);
+    }
+
+    public async update(key: string, callback: (data: any) => any) {
+        return this.put(
+            await this.get(key)
+                .then(obj => ({ ...obj, _id: key }))
+                .then(callback)
+        ).catch(logerror);
     }
 }
 

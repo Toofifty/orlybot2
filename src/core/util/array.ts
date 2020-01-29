@@ -25,3 +25,11 @@ export const split = <T>(arr: T[], delim: T): T[][] =>
             [[]] as T[][]
         )
         .filter(arr => arr.length > 0);
+
+export const flat = <T>(arr: T[][]): T[] =>
+    arr.reduce((result, item) => {
+        if (Array.isArray(item)) {
+            return [...result, ...item];
+        }
+        return [...result, item];
+    }, []);

@@ -20,11 +20,12 @@ export default class CommandRunner {
 
     private constructor(message: Message) {
         this.message = message;
-        this.resolveCommand(message.firstToken);
+        this.resolveCommand(message);
     }
 
-    public resolveCommand(keyword: string) {
-        this.command = registry.find(keyword);
+    public resolveCommand(message: Message) {
+        this.command =
+            registry.find(message.firstToken) ?? registry.findMatch(message);
     }
 
     public get isNoOp(): boolean {
@@ -33,7 +34,6 @@ export default class CommandRunner {
 
     public async execute(): Promise<void> {
         try {
-            loginfo(`Executing command: [${this.command.keyword}]`);
             return await this.command.run(this.message);
         } catch (e) {
             this.message.replySystemError(e);
