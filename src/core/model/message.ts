@@ -15,6 +15,9 @@ enum MessageSubtype {
     GROUP_JOIN = 'group_join',
 }
 
+/**
+ * Serialised message for database storage.
+ */
 export type SavedMessage = {
     type: MessageType;
     subtype?: MessageSubtype;
@@ -27,16 +30,53 @@ export type SavedMessage = {
     ts: number;
 };
 
+/**
+ * Model for a user message received from Slack.
+ */
 export default class Message extends BaseModel {
+    /**
+     * Message type. For most user messages, it should
+     * be 'message'.
+     */
     public type: MessageType;
+
+    /**
+     * Message subtype. Not used for most user messages.
+     */
     public subtype?: MessageSubtype;
+
+    /**
+     * Text to process. May not be the original message -
+     * since user and channel aliases are removed.
+     */
     public text: string;
+
+    /**
+     * Original user that send the message.
+     */
     public originalUser: User;
+
+    /**
+     * Overridden user to run the message/command as.
+     */
     public aliasedUser?: User;
+
+    /**
+     * Original channel the message was posted in.
+     */
     public originalChannel: Channel;
+
+    /**
+     * Overridden channel to process the message/command under.
+     */
     public aliasedChannel?: Channel;
+
     public time: Date;
 
+    /**
+     * Untouched text, even after aliased users/channels are
+     * removed.
+     */
     private originalText: string;
 
     public static from(data: any) {
@@ -75,15 +115,24 @@ export default class Message extends BaseModel {
             this.text = this.text.replace(match, '');
         }
 
+        // log this message in the user model
         this.user.said(this);
 
         return this;
     }
 
+    /**
+     * Types that indicate the message was a user message.
+     */
     private static userMessageTypes(): MessageType[] {
         return [MessageType.MESSAGE];
     }
 
+    /**
+     * Check if this message is a user message, meaning
+     * it is the correct type and it was not posted by
+     * this bot or Slackbot.
+     */
     public get isUserMessage(): boolean {
         return (
             Message.userMessageTypes().includes(this.type) &&
@@ -93,27 +142,47 @@ export default class Message extends BaseModel {
         );
     }
 
+    /**
+     * Reply directly to the message - in whatever context
+     * the message was originally in (IM or channel).
+     */
     public reply(text: string) {
         if (this.channel.isIm) return this.replyPrivately(text);
         return this.channel.message(text);
     }
 
+    /**
+     * Reply ephemerally to the message.
+     */
     public replyEphemeral(text: string) {
         return this.channel.ephemeral(this.user.id, text);
     }
 
+    /**
+     * Reply to the message in an IM.
+     */
     public replyPrivately(text: string) {
         return this.user.message(text);
     }
 
+    /**
+     * Show a user error (ephemeral) to the user.
+     */
     public replyError(text: string) {
         return this.replyEphemeral(`:exclamation:\`${text}\``);
     }
 
+    /**
+     * Show a system error (ephemeral) to the user.
+     */
     public replySystemError(text: string) {
         return this.replyEphemeral(`:bangbang: \`${text}\``);
     }
 
+    /**
+     * Get a single-line representation of the whole message
+     * for logging.
+     */
     public toString() {
         const channelName = this.aliasedChannel
             ? `${this.originalChannel.tag ?? 'direct message'} -> ${
@@ -126,38 +195,70 @@ export default class Message extends BaseModel {
         return `[${channelName}] ${userName}: ${this.text}`;
     }
 
+    /**
+     * Get the acting user (aliased if available, else original).
+     */
     public get user() {
         return this.aliasedUser ?? this.originalUser;
     }
 
+    /**
+     * Set the original user.
+     */
     public set user(user: User) {
         this.originalUser = user;
     }
 
+    /**
+     * Get the acting channel (aliased if available, else original).
+     */
     public get channel() {
         return this.aliasedChannel ?? this.originalChannel;
     }
 
+    /**
+     * Set the original channel.
+     */
     public set channel(channel: Channel) {
         this.originalChannel = channel;
     }
 
+    /**
+     * Get the contents of the message split into individual
+     * tokens - just like command line arguments. Words inside
+     * of matching quotes will be treated as a single token.
+     */
     public get tokens() {
         return tokenize(this.text);
     }
 
+    /**
+     * Get the first token, which will indicate which command to run.
+     */
     public get firstToken() {
         return this.tokens[0];
     }
 
+    /**
+     * Get all but the first token, these are the command's arguments.
+     */
     public get lastTokens() {
         return this.tokens.slice(1);
     }
 
+    /**
+     * Get a split list of tokens by `&&`.
+     */
     public get terms() {
         return split(this.tokens, '&amp;&amp;');
     }
 
+    /**
+     * Get all parsable messages inside this one message - if
+     * there is only one term, then this message itself is
+     * parsable. If there are more than one, create a "sub"
+     * message for each as copies of this message.
+     */
     public async all() {
         if (this.terms.length === 1) {
             return [this];
@@ -171,6 +272,9 @@ export default class Message extends BaseModel {
         );
     }
 
+    /**
+     * Serialize the message data for storage.
+     */
     public serialize(): SavedMessage {
         return {
             type: this.type,

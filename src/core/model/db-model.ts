@@ -11,10 +11,16 @@ export default class DbModel extends BaseModel {
         return this;
     }
 
+    /**
+     * Serialize the model for storage.
+     */
     public serialize() {
         throw new Error('Unimplemented serialize');
     }
 
+    /**
+     * Persist the model to the database.
+     */
     public async save() {
         const data: any = this.serialize();
         const stored = await db.get(data._id);

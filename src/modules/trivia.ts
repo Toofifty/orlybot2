@@ -22,23 +22,25 @@ const currentTrivias: Record<string, Trivia> = {};
 
 const correct = (channel: string) => (message: Message) => {
     if (message.channel.id !== channel) return;
-    message.user.meta.triviaWins = (message.user.meta.triviaWins ?? 0) + 1;
-    message.user.save();
+    const wins = message.user.meta('trivia_wins', (w: number) => (w ?? 0) + 1);
     message.reply(
-        `You got it ${message.user}! You've won ${message.user.meta.triviaWins} trivias.`
+        choose([
+            `Well hot dog! We have a weiner! You win ${message.user}! You're on ${wins} wins.`,
+            `You got it ${message.user}! You've won ${wins} trivias.`,
+            `Good stuff ${message.user}! That's ${wins} wins so far.`,
+        ])
     );
     teardown(message.channel.id);
 };
 
 const incorrect = (channel: string) => (message: Message) => {
     if (message.channel.id !== channel) return;
-    message.user.meta.triviaBadGuesses =
-        (message.user.meta.triviaBadGuesses ?? 0) + 1;
-    message.user.save();
+    message.user.meta('trivia_bad_guesses', (g: number) => (g ?? 0) + 1);
     message.reply(
         choose([
             `I don't think that's right ${message.user} :/`,
             `Not even close ${message.user}!`,
+            `Wayyy off ${message.user}`,
             `${message.user} - nope.`,
             `${message.user} - nada.`,
             `${message.user} - no bueno.`,
@@ -113,8 +115,9 @@ Command.create('trivia', async (message, [diff = 'easy']) => {
         Command.sub('score', async (message, [user]) => {
             const target = user ? await User.find(user) : message.user;
 
-            const { triviaWins, triviaBadGuesses } = target.meta;
-            return `${target} has ${triviaWins} wins and ${triviaBadGuesses} total incorrect guesses`;
+            const wins = target.meta('trivia_wins');
+            const guesses = target.meta('trivia_bad_guesses');
+            return `${target} has ${wins} wins and ${guesses} total incorrect guesses`;
         })
             .desc("Get a user's trivia score")
             .arg({ name: 'user', def: 'you' })
