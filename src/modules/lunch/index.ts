@@ -8,7 +8,7 @@ import {
     removeCategory,
     editCategory,
 } from './categories';
-import { listTrain, joinTrain, leaveTrain, kickTrain } from './train';
+import { listTrain, joinTrain, leaveTrain, kickTrain, depart } from './train';
 
 Command.create('lunch', async message => {
     await rollover(message.channel);
@@ -93,4 +93,5 @@ Command.create('lunch', async message => {
     .nest(listTrain)
     .nest(joinTrain)
     .nest(leaveTrain)
-    .nest(kickTrain);
+    .nest(kickTrain)
+    .nest(depart);
