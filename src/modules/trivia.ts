@@ -28,6 +28,8 @@ const correct = (channel: string) => (message: Message) => {
             `Well hot dog! We have a weiner! You win ${message.user}! You're on ${wins} wins.`,
             `You got it ${message.user}! You've won ${wins} trivias.`,
             `Good stuff ${message.user}! That's ${wins} wins so far.`,
+            `You're on fire ${message.user}! ${wins} total wins!`,
+            `Slow down ${message.user} and let other people have a chance! You're on ${wins} wins.`,
         ])
     );
     teardown(message.channel.id);
@@ -44,6 +46,13 @@ const incorrect = (channel: string) => (message: Message) => {
             `${message.user} - nope.`,
             `${message.user} - nada.`,
             `${message.user} - no bueno.`,
+            `HA! Yeah right, ${message.user}`,
+            `Well done ${message.user}! You got it completely wrong!`,
+            `Serious ${message.user}? That's your answer?`,
+            `Try again ${message.user}.`,
+            `Better luck next time ${message.user}!`,
+            `Pfft. Try a bit harder ${message.user}.`,
+            `${message.user}...\nno.`,
         ])
     );
 };
