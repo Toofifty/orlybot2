@@ -199,8 +199,8 @@ export default class Command {
      * command matches the first pass (key lookup).
      */
     public matches(message: Message): boolean {
-        if (this.phrase) {
-            return message.text.includes(this.keyword);
+        if (this.phrase && message.text.includes(this.keyword)) {
+            return true;
         }
 
         return this.aliases.includes(message.firstToken);
@@ -213,8 +213,12 @@ export default class Command {
         loginfo(`Executing command: [${this.keywords}]`);
         if (message.tokens.length >= step) {
             const nextToken = message.tokens[step + 1];
-            if (nextToken in this.subcommands) {
-                return this.subcommands[nextToken].run(message, step + 1);
+            const matchedSub = Object.values(this.subcommands).find(
+                sub =>
+                    sub.keyword === nextToken || sub.aliases.includes(nextToken)
+            );
+            if (matchedSub) {
+                return matchedSub.run(message, step + 1);
             }
         }
 

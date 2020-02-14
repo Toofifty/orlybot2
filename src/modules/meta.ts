@@ -35,7 +35,3 @@ Command.create('commands')
             .desc('Show all disabled commands')
             .admin()
     );
-
-Command.create('dumpdb', () => {
-    exec('');
-}).hide();
