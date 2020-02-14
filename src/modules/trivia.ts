@@ -93,7 +93,7 @@ Command.create('trivia', async (message, [diff = 'easy']) => {
         data = await fetch(
             `https://opentdb.com/api.php?amount=1&difficulty=${diff}`
         ).then(res => res.json());
-        question = data.results[0];
+        question = data.results[0].question;
     }
 
     const {
