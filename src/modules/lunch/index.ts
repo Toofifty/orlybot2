@@ -1,43 +1,14 @@
 import { Command } from 'core/commands';
-import { dateTZ } from 'core/util';
-import db from 'core/db';
-import Channel from 'core/model/channel';
-import { LunchStore, LunchRecord } from './types';
 import { decide } from './decide';
-
-const defaultToday = (): LunchRecord => ({
-    option: null,
-    date: dateTZ().toDateString(),
-    participants: [],
-    successful: true,
-});
-
-const defaultData = (): LunchStore => ({
-    today: defaultToday(),
-    history: [],
-    options: [],
-    categories: [],
-});
-
-const load = async (channel: Channel) => {
-    const data = await db.get<LunchStore>(`lunch:${channel.id}`);
-    if (!data) throw new Error('Failed to load channel lunch data :(');
-    return data;
-};
-
-const update = (channel: Channel, callback: (data: LunchStore) => LunchStore) =>
-    db.update(`lunch:${channel.id}`, callback);
-
-const rollover = (channel: Channel) =>
-    update(channel, store => {
-        const { today, history } = store ?? defaultData();
-        if (today.date !== dateTZ().toDateString()) {
-            if (!today.option) today.successful = false;
-            store.history = [...history, today];
-            store.today = defaultToday();
-        }
-        return store;
-    });
+import { rollover, load, update } from './data';
+import { listOptions, addOption, removeOption, editOption } from './options';
+import {
+    listCategories,
+    addCategory,
+    removeCategory,
+    editCategory,
+} from './categories';
+import { listTrain, joinTrain, leaveTrain, kickTrain } from './train';
 
 Command.create('lunch', async message => {
     await rollover(message.channel);
@@ -62,14 +33,64 @@ Command.create('lunch', async message => {
     }
 
     const { weight, ...decision } = decide(options, history);
-    update(message.channel, store => ({
+    await update(message.channel, store => ({
         ...store,
         today: {
             ...store.today,
             option: decision,
         },
     }));
+
+    return `I think we should get ${decision.icon ? `${decision.icon} ` : ''}*${
+        decision.name
+    }*! (${weight}% chance)`;
 })
     .desc("What's for lunch?")
     .alias('l', 'i', "what's for lunch?", 'whats for lunch?')
-    .isPhrase();
+    .isPhrase()
+    .nest(
+        Command.sub('override', async (message, [name]) => {
+            await rollover(message.channel);
+            const { today, options } = await load(message.channel);
+
+            if (!today.participants.includes(message.user.id))
+                throw "You've gotta be on the lunch train to override";
+
+            if (!today.option) {
+                throw "We haven't picked an option yet... why would you want to override?";
+            }
+
+            const lunch = options.find(
+                option => option.name.toLowerCase() === name.toLowerCase()
+            );
+
+            if (!lunch) throw `Never heard of ${name} :man-shrugging:`;
+
+            await update(message.channel, store => ({
+                ...store,
+                today: {
+                    ...store.today,
+                    option: lunch,
+                },
+            }));
+
+            return `Lunch overridden to ${lunch.icon ? `${lunch.icon} ` : ''}*${
+                lunch.name
+            }*!`;
+        })
+            .desc("Override today's lunch option")
+            .arg({ name: 'option-name', required: true })
+            .admin()
+    )
+    .nest(listOptions)
+    .nest(addOption)
+    .nest(removeOption)
+    .nest(editOption)
+    .nest(listCategories)
+    .nest(addCategory)
+    .nest(removeCategory)
+    .nest(editCategory)
+    .nest(listTrain)
+    .nest(joinTrain)
+    .nest(leaveTrain)
+    .nest(kickTrain);

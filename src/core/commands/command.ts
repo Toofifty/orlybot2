@@ -237,10 +237,13 @@ export default class Command {
      * a pipe `|`).
      */
     public get keywords(): string {
-        const keywords = this.parent
-            ? `${this.parent.keywords} ${this.keyword}`
+        return [this.commandName, ...this.aliases].join('|');
+    }
+
+    public get commandName(): string {
+        return this.parent
+            ? `${this.parent.commandName} ${this.keyword}`
             : this.keyword;
-        return [keywords, ...this.aliases].join('|');
     }
 
     /**

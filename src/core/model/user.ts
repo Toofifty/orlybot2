@@ -53,7 +53,7 @@ export default class User extends DbModel {
      */
     public static async find(id: ID, refetch?: boolean): Promise<User> {
         if (USER_TAG_REGEX.test(id)) {
-            id = id.match(USER_TAG_REGEX)![0];
+            id = id.match(USER_TAG_REGEX)![1];
         }
 
         const dbUser = await db.get(`user:${id}`);

@@ -169,14 +169,14 @@ export default class Message extends BaseModel {
      * Show a user error (ephemeral) to the user.
      */
     public replyError(text: string) {
-        return this.replyEphemeral(`:exclamation:\`${text}\``);
+        return this.replyEphemeral(`:exclamation: ${text}`);
     }
 
     /**
      * Show a system error (ephemeral) to the user.
      */
     public replySystemError(text: string) {
-        return this.replyEphemeral(`:bangbang: \`${text}\``);
+        return this.replyEphemeral(`:bangbang:  ${text}`);
     }
 
     /**
