@@ -40,7 +40,7 @@ export default class User extends DbModel {
     }
 
     protected async finalise(data: any) {
-        this.isAdmin = process.env.SLACK_ADMINS.split(',').includes(this.id);
+        this.isAdmin = process.env.SLACK_ADMINS!.split(',').includes(this.id);
         this._meta = data.meta ?? {};
         return this;
     }
@@ -53,7 +53,7 @@ export default class User extends DbModel {
      */
     public static async find(id: ID, refetch?: boolean): Promise<User> {
         if (USER_TAG_REGEX.test(id)) {
-            id = id.match(USER_TAG_REGEX)[0];
+            id = id.match(USER_TAG_REGEX)![0];
         }
 
         const dbUser = await db.get(`user:${id}`);

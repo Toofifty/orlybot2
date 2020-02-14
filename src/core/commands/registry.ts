@@ -2,8 +2,13 @@ import Command from './command';
 import Message from 'core/model/message';
 import db from 'core/db';
 
-const loadDisabledCommands = db
-    .get('disabled-commands')
+interface DisabledCommands {
+    list: string[];
+    _id: string;
+}
+
+const loadDisabledCommands: Promise<string[]> = db
+    .get<DisabledCommands>('disabled-commands')
     .then(obj => obj?.list ?? [])
     .catch(() => []);
 
@@ -90,7 +95,7 @@ class Registry {
             throw new Error(`There is no command ${keyword}`);
         }
         this.commands[keyword] = this.allCommands[keyword];
-        db.update('disabled-commands', obj => ({
+        db.update<DisabledCommands>('disabled-commands', obj => ({
             ...obj,
             list: (obj?.list ?? []).filter((kw: string) => kw !== keyword),
         }));
@@ -111,7 +116,7 @@ class Registry {
             throw new Error(`${keyword} is already disabled`);
         }
         delete this.commands[keyword];
-        db.update('disabled-commands', obj => ({
+        db.update<DisabledCommands>('disabled-commands', obj => ({
             ...obj,
             list: [...(obj?.list ?? []), keyword],
         }));

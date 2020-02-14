@@ -8,17 +8,20 @@ class Database {
         this.db = new PouchDB(dbKey);
     }
 
-    public async get(id: string) {
-        return this.db.get(id).catch(() => undefined);
+    public async get<T>(id: string): Promise<T | undefined> {
+        return this.db.get(id).catch(() => undefined) as any;
     }
 
-    public async put(data: any) {
+    public async put<T>(data: T) {
         return this.db.put(data, { force: true }).catch(logerror);
     }
 
-    public async update(key: string, callback: (data: any) => any) {
+    public async update<T>(
+        key: string,
+        callback: (data: T & { _id: string }) => T
+    ) {
         return this.put(
-            await this.get(key)
+            await this.get<T>(key)
                 .then(obj => ({ ...obj, _id: key }))
                 .then(callback)
         );

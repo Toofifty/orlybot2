@@ -5,3 +5,4 @@ export { last, split } from './array';
 export { default as arghelp } from './arghelp';
 export { pre, tag, emoji } from './strings';
 export { randint, choose } from './random';
+export { dateTZ } from './date';

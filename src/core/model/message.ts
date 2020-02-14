@@ -100,7 +100,7 @@ export default class Message extends BaseModel {
                 this.replyError("You don't have permission to alias a channel");
                 return this;
             }
-            const [match, channelId] = this.text.match(CHANNEL_ALIAS_REGEX);
+            const [match, channelId] = this.text.match(CHANNEL_ALIAS_REGEX)!;
             this.aliasedChannel = await Channel.find(channelId);
             this.text = this.originalText.replace(match, '');
         }
@@ -110,7 +110,7 @@ export default class Message extends BaseModel {
                 this.replyError("You don't have permission to alias a user");
                 return this;
             }
-            const [match, userId] = this.text.match(USER_ALIAS_REGEX);
+            const [match, userId] = this.text.match(USER_ALIAS_REGEX)!;
             this.aliasedUser = await User.find(userId);
             this.text = this.text.replace(match, '');
         }

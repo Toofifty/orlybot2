@@ -21,6 +21,7 @@
     "dotenv": "^8.2.0",
     "node-fetch": "^2.6.0",
     "nodemon": "^2.0.2",
+    "parse-duration": "^0.1.2",
     "pouchdb-node": "^7.1.1",
     "tsconfig-paths": "^3.9.0"
   },

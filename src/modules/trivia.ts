@@ -69,7 +69,7 @@ const teardown = (channel: string) => {
     trivia.wrong.forEach(kw => registry.unregister(kw));
     registry.unregister(trivia.answer);
 
-    currentTrivias[channel] = undefined;
+    delete currentTrivias[channel];
 };
 
 Command.create('trivia', async (message, [diff = 'easy']) => {

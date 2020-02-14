@@ -2,21 +2,17 @@ import { Command, registry } from 'core/commands';
 import { pre, choose, randint, emoji } from 'core/util';
 import { flat } from 'core/util/array';
 
-Command.create('say', (message, args) => {
-    message.reply(args.join(' '));
-})
+Command.create('say', (_, args) => args.join(' '))
     .desc('Repeat after me')
     .arg({ name: '...text', required: true });
 
-Command.create('help', (message, args) => {
+Command.create('help', (_, args) => {
     const search = args.join(' ');
-    message.reply(
-        pre(
-            flat(registry.all().map(command => command.help))
-                .filter(text => search.length === 0 || text.includes(search))
-                .sort((a, b) => (a > b ? 1 : -1))
-                .join('\n') || `Nothing found searching for "${search}"`
-        )
+    return pre(
+        flat(registry.all().map(command => command.help))
+            .filter(text => search.length === 0 || text.includes(search))
+            .sort((a, b) => (a > b ? 1 : -1))
+            .join('\n') || `Nothing found searching for "${search}"`
     );
 })
     .desc('Get some help')

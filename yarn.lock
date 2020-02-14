@@ -3069,6 +3069,11 @@ package-json@^4.0.0:
     registry-url "^3.0.3"
     semver "^5.1.0"
 
+parse-duration@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/parse-duration/-/parse-duration-0.1.2.tgz#9f1403ab86d6139f88a0e55ea6783afeca3110c4"
+  integrity sha512-0qfMZyjOUFBeEIvJ5EayfXJqaEXxQ+Oj2b7tWJM3hvEXvXsYCk05EDVI23oYnEw2NaFYUWdABEVPBvBMh8L/pA==
+
 parse-json@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/parse-json/-/parse-json-2.2.0.tgz#f480f40434ef80741f8469099f8dea18f55a4dc9"

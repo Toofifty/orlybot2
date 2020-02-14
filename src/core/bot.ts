@@ -20,8 +20,8 @@ class Bot {
     private rtm: RTMClient;
 
     public constructor() {
-        this.web = new WebClient(process.env.SLACK_TOKEN);
-        this.rtm = new RTMClient(process.env.SLACK_TOKEN);
+        this.web = new WebClient(process.env.SLACK_TOKEN!);
+        this.rtm = new RTMClient(process.env.SLACK_TOKEN!);
         // this.checkIn();
         this.registerMessageListener();
         this.rtm.start().then(({ self }: any) => {
@@ -37,7 +37,8 @@ class Bot {
      */
     private async checkIn(): Promise<void> {
         await sleep(2000);
-        process.env.SLACK_ADMINS.split(',')
+        process.env
+            .SLACK_ADMINS!.split(',')
             .filter(Boolean)
             .forEach(async adminId => {
                 const adminUser = await User.find(adminId);

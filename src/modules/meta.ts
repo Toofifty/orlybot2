@@ -1,5 +1,6 @@
 import { Command, registry } from 'core/commands';
 import { tag } from 'core/util';
+import { exec } from 'child_process';
 
 Command.create('commands')
     .alias('cmd')
@@ -34,3 +35,7 @@ Command.create('commands')
             .desc('Show all disabled commands')
             .admin()
     );
+
+Command.create('dumpdb', () => {
+    exec('');
+}).hide();

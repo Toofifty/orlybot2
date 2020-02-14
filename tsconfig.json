@@ -15,6 +15,7 @@
         "module": "commonjs",
         "allowJs": true,
         "esModuleInterop": true,
+        "strictNullChecks": true,
         "paths": {
             "core": ["./core"],
             "modules": ["./modules"]

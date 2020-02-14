@@ -28,7 +28,7 @@ export default class DbModel extends BaseModel {
         if (!stored) {
             await db.put(data);
         } else {
-            await db.update(data._id, obj => ({ ...obj, ...data }));
+            await db.update<any>(data._id, obj => ({ ...obj, ...data }));
         }
     }
 }
