@@ -86,13 +86,18 @@ Command.create('trivia', async (message, [diff = 'easy']) => {
         return currentTrivias[message.channel.id].question;
     }
 
-    const data = await fetch(
-        `https://opentdb.com/api.php?amount=1&difficulty=${diff}`
-    ).then(res => res.json());
+    let question: string = '';
+    let data: any;
+
+    while (!question || question.includes('&')) {
+        data = await fetch(
+            `https://opentdb.com/api.php?amount=1&difficulty=${diff}`
+        ).then(res => res.json());
+        question = data.results[0];
+    }
 
     const {
         category,
-        question,
         correct_answer: correctAnswer,
         incorrect_answers: incorrectAnswers,
     }: ApiQuestion = data.results[0];
