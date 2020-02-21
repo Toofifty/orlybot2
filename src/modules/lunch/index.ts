@@ -47,7 +47,7 @@ Command.create('lunch', async message => {
     }*! (${weight}% chance)`;
 })
     .desc("What's for lunch?")
-    .alias('l', 'i', "what's for lunch?", 'whats for lunch?')
+    .alias('l', 'i', "what's for lunch?", 'whats for lunch?', 'lunch?')
     .isPhrase()
     .nest(
         Command.sub('override', async (message, [name]) => {
@@ -126,6 +126,35 @@ Command.create('lunch', async message => {
                 CommandRunner.run('lunch', message);
             }
         })
+    )
+    .nest(
+        Command.sub('override', async (message, args) => {
+            await rollover(message.channel);
+            const { options } = await load(message.channel);
+
+            const name = args.join(' ');
+
+            const option = options.find(option => option.name.includes(name));
+
+            if (!option) {
+                throw `I can't find a lunch option with that name \`${name}\``;
+            }
+
+            update(message.channel, store => ({
+                ...store,
+                today: {
+                    ...store.today,
+                    option,
+                },
+            }));
+
+            message.reply(
+                `Lunch overridden to ${option.icon} *${option.name}*!`
+            );
+        })
+            .desc("Override today's lunch option")
+            .arg({ name: 'option-name', required: true })
+            .admin()
     )
     .nest(listOptions)
     .nest(addOption)
