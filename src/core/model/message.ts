@@ -253,6 +253,10 @@ export default class Message extends BaseModel {
         return split(this.tokens, '&amp;&amp;');
     }
 
+    public clone() {
+        return Message.from(this.serialize());
+    }
+
     /**
      * Get all parsable messages inside this one message - if
      * there is only one term, then this message itself is

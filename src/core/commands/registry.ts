@@ -50,17 +50,16 @@ class Registry {
     }
 
     /**
-     * Get a command by main keyword. (first pass)
+     * Get a command by main keyword, otherwise check matches
+     * on all commands using the message
      */
-    public find(keyword: string) {
-        return this.commands[keyword];
-    }
-
-    /**
-     * Get a command by alias or full-text match. (second pass)
-     */
-    public findMatch(message: Message) {
-        return this.all().find(command => command.matches(message));
+    public find(keyword: string, message?: Message) {
+        return (
+            this.commands[keyword] ??
+            (message
+                ? this.all().find(command => command.matches(message))
+                : undefined)
+        );
     }
 
     /**

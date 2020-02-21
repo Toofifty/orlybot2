@@ -34,6 +34,15 @@ export default class CommandRunner {
 
     private static async handleSingle(message: Message) {
         const runner = new CommandRunner(message);
+        runner.resolveCommand();
+        if (runner.isNoOp) return;
+
+        await runner.execute();
+    }
+
+    public static async run(command: string, message: Message) {
+        const runner = new CommandRunner(await message.clone());
+        runner.forceCommand(command);
         if (runner.isNoOp) return;
 
         await runner.execute();
@@ -41,7 +50,6 @@ export default class CommandRunner {
 
     private constructor(message: Message) {
         this.message = message;
-        this.resolveCommand(message);
     }
 
     /**
@@ -52,10 +60,16 @@ export default class CommandRunner {
      * Second pass: check if any of the commands pass the match
      *      test defined in the Command class.
      */
-    public resolveCommand(message: Message) {
-        this.command =
-            registry.find(message.firstToken.toLowerCase()) ??
-            registry.findMatch(message);
+    public resolveCommand() {
+        this.command = registry.find(
+            this.message.firstToken.toLowerCase(),
+            this.message
+        );
+    }
+
+    public forceCommand(command: string) {
+        this.message.set({ text: command });
+        this.resolveCommand();
     }
 
     /**

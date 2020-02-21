@@ -42,3 +42,13 @@ export const rollover = (channel: Channel) =>
         }
         return store;
     });
+
+export const cancel = (channel: Channel) =>
+    update(channel, store => ({
+        ...store,
+        today: {
+            ...store.today,
+            option: null,
+        },
+        history: [...store.history, { ...store.today, successful: false }],
+    }));

@@ -1,6 +1,6 @@
-import { Command } from 'core/commands';
+import { Command, registry } from 'core/commands';
 import { decide } from './decide';
-import { rollover, load, update } from './data';
+import { rollover, load, update, cancel } from './data';
 import { listOptions, addOption, removeOption, editOption } from './options';
 import {
     listCategories,
@@ -9,6 +9,7 @@ import {
     editCategory,
 } from './categories';
 import { listTrain, joinTrain, leaveTrain, kickTrain, depart } from './train';
+import CommandRunner from 'core/commands/runner';
 
 Command.create('lunch', async message => {
     await rollover(message.channel);
@@ -81,6 +82,50 @@ Command.create('lunch', async message => {
             .desc("Override today's lunch option")
             .arg({ name: 'option-name', required: true })
             .admin()
+    )
+    .nest(
+        Command.sub('reroll', async message => {
+            await rollover(message.channel);
+            let { today } = await load(message.channel);
+
+            if (!today.participants.find(id => id === message.user.id)) {
+                throw 'You have to join the lunch train to vote to reroll';
+            }
+
+            if (today.rerollVoters?.find(id => id === message.user.id)) {
+                throw "You've already voted to reroll";
+            }
+
+            await update(message.channel, store => ({
+                ...store,
+                today: {
+                    ...store.today,
+                    rerollVoters: [
+                        ...(today.rerollVoters ?? []),
+                        message.user.id,
+                    ],
+                },
+            }));
+            ({ today } = await load(message.channel));
+
+            message.reply(
+                `${message.user} voted to reroll today's lunch ${
+                    today.rerollVoters?.length
+                }/${Math.ceil(today.participants.length / 2)}`
+            );
+
+            if (
+                (today.rerollVoters?.length ?? 0) >
+                today.participants.length / 2
+            ) {
+                message.reply(
+                    `Looks like we're not getting ${today.option?.name}, rerolling...`
+                );
+
+                await cancel(message.channel);
+                CommandRunner.run('lunch', message);
+            }
+        })
     )
     .nest(listOptions)
     .nest(addOption)
