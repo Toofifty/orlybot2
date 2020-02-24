@@ -125,7 +125,7 @@ Command.create('lunch', async message => {
                 await cancel(message.channel);
                 CommandRunner.run('lunch', message);
             }
-        })
+        }).desc("Vote to reroll today's chosen lunch")
     )
     .nest(
         Command.sub('override', async (message, args) => {
