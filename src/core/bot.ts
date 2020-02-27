@@ -18,6 +18,7 @@ class Bot {
     public name: string;
     private web: WebClient;
     private rtm: RTMClient;
+    private readyCallbacks: ((bot: Bot) => void)[] = [];
 
     public constructor() {
         this.web = new WebClient(process.env.SLACK_TOKEN!);
@@ -27,8 +28,18 @@ class Bot {
         this.rtm.start().then(({ self }: any) => {
             this.id = self.id;
             this.name = self.name;
+            this.readyCallbacks.forEach(cb => cb(this));
+            this.readyCallbacks = [];
         });
         loginfo('Connected to Slack');
+    }
+
+    public ready(cb: (bot: Bot) => void) {
+        if (this.id) {
+            cb(this);
+        } else {
+            this.readyCallbacks.push(cb);
+        }
     }
 
     /**

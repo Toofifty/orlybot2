@@ -67,8 +67,8 @@ export const removeOption = Command.sub(
         await rollover(message.channel);
         const { options } = await load(message.channel);
 
-        const index = options.findIndex(
-            option => option.name.toLowerCase() === name.toLowerCase()
+        const index = options.findIndex(option =>
+            option.name.toLowerCase().includes(name.toLowerCase())
         );
         if (index === -1) throw `Couldn't find lunch option *${name}*`;
 
@@ -93,8 +93,8 @@ export const editOption = Command.sub(
 
         if (!icon) throw 'Invalid arguments';
 
-        const option = options.find(
-            option => option.name.toLowerCase() === oldName.toLowerCase()
+        const option = options.find(option =>
+            option.name.toLowerCase().includes(oldName.toLowerCase())
         );
 
         if (!option) throw `Couldn't find option ${oldName} to update`;
