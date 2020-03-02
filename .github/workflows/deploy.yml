@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Node
+      uses: actions/setup-node@v1
+      with:
+        node-version: '10.19.x'
+    - name: Install dependencies
+      uses: borales/actions-yarn@v2.0.0
+      with:
+        cmd: install --force
+    - name: Build project
+      uses: borales/actions-yarn@v2.0.0
+      with:
+        cmd: build
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: dist
+        path: dist
+  deploy:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v1
+      with:
+        name: dist
+    - name: Deploy files
+      uses: appleboy/scp-action@v0.0.6
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.KEY }}
+        source: "dist/*"
+        target: "bot/mathobot/dist"
+        overwrite: true
+        strip_components: 1
+  restart-service:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute pm2 restart
+        uses: appleboy/ssh-action@v0.0.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script: pm2 restart mathobot
