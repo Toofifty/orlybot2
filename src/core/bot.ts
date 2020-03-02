@@ -5,13 +5,18 @@ import {
     ChatPostEphemeralArguments,
     UsersInfoArguments,
     ConversationsInfoArguments,
+    ReactionsAddArguments,
+    ChatUpdateArguments,
 } from '@slack/web-api';
 import { loginfo, logdebug, logerror } from './log';
 import User from 'core/model/user';
-import { sleep } from 'core/util';
+import { sleep, camel } from 'core/util';
 import Message from './model/message';
 import { ID } from './model/types';
 import CommandRunner from './commands/runner';
+import { AllEvents } from './event-types';
+
+export type RTMEvent = 'reaction_added' | 'reaction_removed';
 
 class Bot {
     public id: ID;
@@ -19,6 +24,7 @@ class Bot {
     private web: WebClient;
     private rtm: RTMClient;
     private readyCallbacks: ((bot: Bot) => void)[] = [];
+    private eventCallbacks: WeakMap<Function, Function> = new WeakMap();
 
     public constructor() {
         this.web = new WebClient(process.env.SLACK_TOKEN!);
@@ -60,6 +66,7 @@ class Bot {
 
     private async registerMessageListener(): Promise<void> {
         this.rtm.on('message', async data => {
+            if (!data) return;
             const message = await Message.from(data);
             if (!message.isUserMessage) return;
             this.rtm.sendTyping(message.channel.id);
@@ -86,6 +93,14 @@ class Bot {
         return await this.web.chat.postMessage(options);
     }
 
+    public _react(options: ReactionsAddArguments) {
+        return this.web.reactions.add(options);
+    }
+
+    public _update(options: ChatUpdateArguments) {
+        return this.web.chat.update(options);
+    }
+
     /**
      * Send an ephemeral message to a user.
      */
@@ -110,6 +125,37 @@ class Bot {
      */
     public async _fetchChannel(options: ConversationsInfoArguments) {
         return ((await this.web.conversations.info(options)) as any).channel;
+    }
+
+    public on<T extends AllEvents>(
+        event: T['type'],
+        callback: (data: T) => void
+    ) {
+        const camelCallback = (data: any) => callback(camel(data));
+        this.eventCallbacks.set(callback, camelCallback);
+        this.rtm.on(event, camelCallback);
+    }
+
+    public once<T extends AllEvents>(
+        event: T['type'],
+        callback: (data: T) => void
+    ) {
+        const camelCallback = (data: any) => camel(data);
+        this.eventCallbacks.set(callback, camelCallback);
+        this.rtm.once(event, camelCallback);
+    }
+
+    public off<T extends AllEvents>(
+        event: T['type'],
+        callback?: (data: T) => void
+    ) {
+        if (callback) {
+            const memoCallback = this.eventCallbacks.get(callback);
+            if (memoCallback) {
+                this.rtm.off(event, memoCallback as any);
+            }
+        }
+        this.rtm.off(event);
     }
 }
 

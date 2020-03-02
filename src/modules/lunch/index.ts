@@ -9,7 +9,14 @@ import {
     removeCategory,
     editCategory,
 } from './categories';
-import { listTrain, joinTrain, leaveTrain, kickTrain, depart } from './train';
+import {
+    listTrain,
+    joinTrain,
+    leaveTrain,
+    kickTrain,
+    depart,
+    startTrain,
+} from './train';
 import {
     listPreferences,
     addPreference,
@@ -151,6 +158,7 @@ Command.create('lunch', async message => {
     .nest(removeCategory)
     .nest(editCategory)
     // train
+    .nest(startTrain)
     .nest(listTrain)
     .nest(joinTrain)
     .nest(leaveTrain)

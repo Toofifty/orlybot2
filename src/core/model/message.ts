@@ -3,6 +3,7 @@ import User from 'core/model/user';
 import Channel from 'core/model/channel';
 import bot from 'core/bot';
 import { tokenize, split } from 'core/util';
+import BotMessage from './bot-message';
 
 const CHANNEL_ALIAS_REGEX = /^<#(\w{9})(?:\|[\w-]+)?>:\s*/;
 const USER_ALIAS_REGEX = /^<@(\w{9})(?:\|[\w-]+)?>:\s*/;
@@ -27,7 +28,7 @@ export type SavedMessage = {
     aliasedUser?: string;
     aliasedChannel?: string;
     originalText: string;
-    ts: number;
+    ts: string;
 };
 
 /**
@@ -73,6 +74,8 @@ export default class Message extends BaseModel {
 
     public time: Date;
 
+    public ts: string;
+
     /**
      * Untouched text, even after aliased users/channels are
      * removed.
@@ -84,6 +87,7 @@ export default class Message extends BaseModel {
     }
 
     protected async finalise(data: any) {
+        if (!this.user) return this;
         // prevent re-finalising for sub-messages
         if (this.user.isModel)
             throw new Error('Tried to create model from another');
@@ -146,23 +150,31 @@ export default class Message extends BaseModel {
      * Reply directly to the message - in whatever context
      * the message was originally in (IM or channel).
      */
-    public reply(text: string) {
+    public async reply(text: string) {
         if (this.channel.isIm) return this.replyPrivately(text);
-        return this.channel.message(text);
+        return (await BotMessage.from(await this.channel.message(text))).set({
+            parent: this,
+        });
     }
 
     /**
      * Reply ephemerally to the message.
      */
-    public replyEphemeral(text: string) {
-        return this.channel.ephemeral(this.user.id, text);
+    public async replyEphemeral(text: string) {
+        return (
+            await BotMessage.from(
+                await this.channel.ephemeral(this.user.id, text)
+            )
+        ).set({ parent: this });
     }
 
     /**
      * Reply to the message in an IM.
      */
-    public replyPrivately(text: string) {
-        return this.user.message(text);
+    public async replyPrivately(text: string) {
+        return (await BotMessage.from(await this.user.message(text))).set({
+            parent: this,
+        });
     }
 
     /**
@@ -289,7 +301,7 @@ export default class Message extends BaseModel {
             aliasedUser: this.aliasedUser?.id,
             aliasedChannel: this.aliasedChannel?.id,
             originalText: this.originalText,
-            ts: Number(this.time),
+            ts: this.ts,
         };
     }
 }

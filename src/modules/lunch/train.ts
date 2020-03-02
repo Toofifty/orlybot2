@@ -7,6 +7,47 @@ import { mention } from 'core/util/strings';
 
 const LUNCH_TRAIN = ':steam_locomotive::railway_car::railway_car:';
 
+export const startTrain = Command.sub('start', async message => {
+    await rollover(message.channel);
+
+    const getTrain = async () => {
+        const { today } = await load(message.channel);
+        return `${LUNCH_TRAIN}${today.participants
+            .map(mention)
+            .join(':railway_car:')}:railway_car:`;
+    };
+
+    await message.reply(
+        `All aboard! ${message.user} has started the lunch train!\n:steam_locomotive: react to the message below to join!`
+    );
+    const listen = await message.reply(await getTrain());
+    await listen.addReaction('steam_locomotive');
+
+    listen.onReactionAdded('steam_locomotive', async ({ itemUser }) => {
+        await update(message.channel, store => ({
+            ...store,
+            today: {
+                ...store.today,
+                participants: [...store.today.participants, message.user.id],
+            },
+        }));
+        listen.edit(await getTrain());
+    });
+
+    listen.onReactionRemoved('steam_locomotive', async ({ itemUser }) => {
+        await update(message.channel, store => ({
+            ...store,
+            today: {
+                ...store.today,
+                participants: store.today.participants.filter(
+                    p => p !== message.user.id
+                ),
+            },
+        }));
+        listen.edit(await getTrain());
+    });
+}).desc('Start the lunch train!');
+
 export const listTrain = Command.sub('who', async message => {
     await rollover(message.channel);
     const { today } = await load(message.channel);
@@ -44,7 +85,9 @@ export const joinTrain = Command.sub('join', async message => {
         },
     }));
 
-    return `${message.user} joined the lunch train! ${LUNCH_TRAIN} Anyone else?`;
+    message.reply(
+        `${message.user} joined the lunch train! ${LUNCH_TRAIN} Anyone else?`
+    );
 }).desc(`Join the lunchtrain! ${LUNCH_TRAIN}`);
 
 export const leaveTrain = Command.sub('leave', async message => {
