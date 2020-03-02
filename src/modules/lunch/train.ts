@@ -23,25 +23,23 @@ export const startTrain = Command.sub('start', async message => {
     const listen = await message.reply(await getTrain());
     await listen.addReaction('steam_locomotive');
 
-    listen.onReactionAdded('steam_locomotive', async ({ itemUser }) => {
+    listen.onReactionAdded('steam_locomotive', async ({ user }) => {
         await update(message.channel, store => ({
             ...store,
             today: {
                 ...store.today,
-                participants: [...store.today.participants, message.user.id],
+                participants: [...store.today.participants, user],
             },
         }));
         listen.edit(await getTrain());
     });
 
-    listen.onReactionRemoved('steam_locomotive', async ({ itemUser }) => {
+    listen.onReactionRemoved('steam_locomotive', async ({ user }) => {
         await update(message.channel, store => ({
             ...store,
             today: {
                 ...store.today,
-                participants: store.today.participants.filter(
-                    p => p !== message.user.id
-                ),
+                participants: store.today.participants.filter(p => p !== user),
             },
         }));
         listen.edit(await getTrain());
