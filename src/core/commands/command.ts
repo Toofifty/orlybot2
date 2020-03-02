@@ -247,6 +247,10 @@ export default class Command {
         return [this.commandName, ...this.aliases].join('|');
     }
 
+    /**
+     * Get the full name of this command, including
+     * parent commands.
+     */
     public get commandName(): string {
         return this.parent
             ? `${this.parent.commandName} ${this.keyword}`
@@ -260,6 +264,25 @@ export default class Command {
      * Returns an empty array if the command is hidden.
      */
     public get help(): string[] {
+        if (this.hidden) return [];
+        return [
+            [
+                this.commandName,
+                ...this.arguments.map(arghelp),
+                '-',
+                this.description,
+            ].join(' '),
+            ...flat(Object.values(this.subcommands).map(sub => sub.help)),
+        ];
+    }
+
+    /**
+     * Get the help text for this command and all sub
+     * commands, including aliases
+     *
+     * Returns an empty array if the command is hidden.
+     */
+    public get helpWithAliases(): string[] {
         if (this.hidden) return [];
         return [
             [

@@ -19,6 +19,19 @@ Command.create('help', (_, args) => {
     .arg({ name: '...search' })
     .alias('h');
 
+Command.create('help-aliases', (_, args) => {
+    const search = args.join(' ');
+    return pre(
+        flat(registry.all().map(command => command.helpWithAliases))
+            .filter(text => search.length === 0 || text.includes(search))
+            .sort((a, b) => (a > b ? 1 : -1))
+            .join('\n') || `Nothing found searching for "${search}"`
+    );
+})
+    .desc('Get some help, and show command aliases')
+    .arg({ name: '...search' })
+    .alias('h');
+
 Command.create('roll', (message, [sides = '6']) => {
     const max = Number(sides);
     const result =

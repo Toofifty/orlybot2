@@ -135,6 +135,11 @@ Command.create('lunch', async message => {
             .arg({ name: 'option-name', required: true })
             .admin()
     )
+    .nest(
+        Command.sub('help', message => {
+            CommandRunner.run('help lunch', message);
+        }).desc('Get lunch help')
+    )
     // options
     .nest(listOptions)
     .nest(addOption)
