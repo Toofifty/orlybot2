@@ -1,17 +1,20 @@
 import { Command } from 'core/commands';
 import { rollover, load, update } from './data';
 import { weight } from './decide';
+import { findOption, findOptionIndex } from './util';
 
 export const listOptions = Command.sub('options', async message => {
     await rollover(message.channel);
-    const { options, history } = await load(message.channel);
+    const { options, history, today, userPreferences } = await load(
+        message.channel
+    );
 
     if (options.length === 0) throw 'No bueno :confused:';
 
     const weightedOptions = options
         .map(option => ({
             ...option,
-            weight: weight(option, history),
+            weight: weight(option, history, today, userPreferences),
         }))
         .sort((a, b) => (a.name > b.name ? 1 : -1));
 
@@ -23,10 +26,14 @@ export const listOptions = Command.sub('options', async message => {
     return `All options:\n ${weightedOptions
         .map(
             option =>
-                `${option.icon ? `${option.icon} ` : ''}*${option.name}* (${(
+                `${option.icon}*${option.name}* (${(
                     (option.weight / totalWeight) *
                     100
-                ).toFixed(2)}%) - ${option.category}`
+                ).toFixed(2)}%) - ${option.category}${
+                    option.attributes
+                        ? ` (${option.attributes.join(', ')})`
+                        : ''
+                }`
         )
         .join('\n')}`;
 })
@@ -44,7 +51,7 @@ export const addOption = Command.sub(
         if (!categories.includes(category.toLowerCase()))
             throw `Couldn't find category ${category.toLowerCase()}`;
 
-        if (options.find(option => option.name === name))
+        if (findOption(options, name))
             throw 'That option already exists :confused:';
 
         await update(message.channel, store => ({
@@ -67,9 +74,7 @@ export const removeOption = Command.sub(
         await rollover(message.channel);
         const { options } = await load(message.channel);
 
-        const index = options.findIndex(
-            option => option.name.toLowerCase() === name.toLowerCase()
-        );
+        const index = findOptionIndex(options, name);
         if (index === -1) throw `Couldn't find lunch option *${name}*`;
 
         const option = options[index];
@@ -89,13 +94,11 @@ export const editOption = Command.sub(
     'edit-option',
     async (message, [oldName, name, category, icon]) => {
         await rollover(message.channel);
-        const { options, history } = await load(message.channel);
+        const { options } = await load(message.channel);
 
         if (!icon) throw 'Invalid arguments';
 
-        const option = options.find(
-            option => option.name.toLowerCase() === oldName.toLowerCase()
-        );
+        const option = findOption(options, oldName);
 
         if (!option) throw `Couldn't find option ${oldName} to update`;
 

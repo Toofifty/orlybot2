@@ -1,4 +1,5 @@
-import { Command, registry } from 'core/commands';
+import { Command } from 'core/commands';
+import CommandRunner from 'core/commands/runner';
 import { decide } from './decide';
 import { rollover, load, update, cancel } from './data';
 import { listOptions, addOption, removeOption, editOption } from './options';
@@ -9,11 +10,18 @@ import {
     editCategory,
 } from './categories';
 import { listTrain, joinTrain, leaveTrain, kickTrain, depart } from './train';
-import CommandRunner from 'core/commands/runner';
+import {
+    listPreferences,
+    addPreference,
+    removePreference,
+} from './preferences';
+import { listAttributes, addAttribute, removeAttribute } from './attributes';
 
 Command.create('lunch', async message => {
     await rollover(message.channel);
-    const { today, options, history } = await load(message.channel);
+    const { today, options, history, userPreferences } = await load(
+        message.channel
+    );
 
     if (!today.participants.includes(message.user.id)) {
         throw new Error(
@@ -33,7 +41,12 @@ Command.create('lunch', async message => {
         );
     }
 
-    const { weight, ...decision } = decide(options, history);
+    const { weight, ...decision } = decide(
+        options,
+        history,
+        today,
+        userPreferences
+    );
     await update(message.channel, store => ({
         ...store,
         today: {
@@ -156,16 +169,27 @@ Command.create('lunch', async message => {
             .arg({ name: 'option-name', required: true })
             .admin()
     )
+    // options
     .nest(listOptions)
     .nest(addOption)
     .nest(removeOption)
     .nest(editOption)
+    // categories
     .nest(listCategories)
     .nest(addCategory)
     .nest(removeCategory)
     .nest(editCategory)
+    // train
     .nest(listTrain)
     .nest(joinTrain)
     .nest(leaveTrain)
     .nest(kickTrain)
-    .nest(depart);
+    .nest(depart)
+    // preferences
+    .nest(listPreferences)
+    .nest(addPreference)
+    .nest(removePreference)
+    // attributes
+    .nest(listAttributes)
+    .nest(addAttribute)
+    .nest(removeAttribute);

@@ -36,3 +36,5 @@ export const flat = <T>(arr: T[][]): T[] =>
         }
         return [...result, item];
     }, []);
+
+export const intersect = <T>(a: T[], b: T[]) => a.filter(i => b.includes(i));

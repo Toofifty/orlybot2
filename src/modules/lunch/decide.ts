@@ -1,4 +1,10 @@
-import { LunchOption, LunchRecord, WeightedOption } from './types';
+import {
+    LunchOption,
+    LunchRecord,
+    WeightedOption,
+    LunchPreferences,
+} from './types';
+import { intersect } from 'core/util/array';
 
 /**
  * Lunch decision criteria
@@ -9,11 +15,13 @@ import { LunchOption, LunchRecord, WeightedOption } from './types';
  */
 export const decide = (
     options: LunchOption[],
-    history: LunchRecord[]
+    history: LunchRecord[],
+    today: LunchRecord,
+    userPreferences: Record<string, LunchPreferences>
 ): WeightedOption => {
     const weightedOptions = options.map(option => ({
         ...option,
-        weight: weight(option, history),
+        weight: weight(option, history, today, userPreferences),
     }));
 
     return select(weightedOptions);
@@ -24,12 +32,15 @@ const sortDate = ({ date: dateA }, { date: dateB }) =>
 
 const days = (diff: number) => diff / (1000 * 60 * 60 * 24);
 
-export const weight = (target: LunchOption, history: LunchRecord[]): number => {
+export const weight = (
+    target: LunchOption,
+    history: LunchRecord[],
+    today: LunchRecord,
+    userPreferences: Record<string, LunchPreferences>
+): number => {
     const visits = history
         .filter(({ option }) => option?.name === target.name)
         .sort(sortDate);
-
-    console.log(visits);
 
     const now = new Date().getTime();
 
@@ -45,7 +56,39 @@ export const weight = (target: LunchOption, history: LunchRecord[]): number => {
         days(now - new Date((categoryVisits[0] || {}).date).getTime()) ||
         20 * Math.random();
 
-    return daysSinceLastVisit + daysSinceLastCategory / 4;
+    let weight = daysSinceLastVisit + daysSinceLastCategory / 4;
+
+    if (today.participants.length > 0) {
+        const preferences = today.participants.reduce((prefs, id) => {
+            const userPrefs = userPreferences[id] ?? {};
+            Object.keys(userPrefs).forEach(pref => {
+                // required
+                if (userPrefs[pref]) prefs[pref] = true;
+                // optional
+                // fuck this is weird logic
+                if (!prefs[pref]) prefs[pref] = false;
+            });
+            return prefs;
+        }, {});
+
+        const required = Object.keys(preferences).filter(p => preferences[p]);
+        const optional = Object.keys(preferences).filter(p => !preferences[p]);
+
+        if (
+            required.length > 0 &&
+            intersect(target.attributes ?? [], required).length === 0
+        ) {
+            // have requirements, no attributes match!
+            return 0;
+        }
+
+        if (intersect(target.attributes ?? [], optional).length > 0) {
+            // bump up preferred options
+            weight *= 2;
+        }
+    }
+
+    return weight;
 };
 
 const select = (options: WeightedOption[]): WeightedOption => {

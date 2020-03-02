@@ -6,3 +6,4 @@ export { default as arghelp } from './arghelp';
 export { pre, tag, emoji } from './strings';
 export { randint, choose } from './random';
 export { dateTZ } from './date';
+export { omit } from './object';

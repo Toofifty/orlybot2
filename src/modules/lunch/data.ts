@@ -15,6 +15,7 @@ const defaultData = (): LunchStore => ({
     history: [],
     options: [],
     categories: [],
+    userPreferences: {},
 });
 
 export const load = async (channel: Channel) => {
@@ -33,6 +34,9 @@ export const rollover = (channel: Channel) =>
         // initialise store
         if (!store.history || !store.options || !store.categories) {
             store = { ...store, ...defaultData() };
+        }
+        if (!store.userPreferences) {
+            store = { ...store, userPreferences: {} };
         }
         const { today, history } = store;
         if (today.date !== dateTZ().toDateString()) {

@@ -4,6 +4,7 @@ export interface LunchOption {
     name: string;
     category: string;
     icon?: string;
+    attributes?: string[];
 }
 
 export interface LunchRecord {
@@ -16,9 +17,18 @@ export interface LunchRecord {
     rating?: number;
 }
 
+export interface LunchPreferences {
+    /**
+     * true if required preference (vegan, vegetarian),
+     * false if non-required
+     */
+    [name: string]: boolean;
+}
+
 export interface LunchStore {
     today: LunchRecord;
     history: LunchRecord[];
     options: LunchOption[];
     categories: string[];
+    userPreferences: Record<string, LunchPreferences>;
 }
