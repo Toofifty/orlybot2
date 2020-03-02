@@ -63,40 +63,6 @@ Command.create('lunch', async message => {
     .alias('l', 'i', "what's for lunch?", 'whats for lunch?', 'lunch?')
     .isPhrase()
     .nest(
-        Command.sub('override', async (message, [name]) => {
-            await rollover(message.channel);
-            const { today, options } = await load(message.channel);
-
-            if (!today.participants.includes(message.user.id))
-                throw "You've gotta be on the lunch train to override";
-
-            if (!today.option) {
-                throw "We haven't picked an option yet... why would you want to override?";
-            }
-
-            const lunch = options.find(
-                option => option.name.toLowerCase() === name.toLowerCase()
-            );
-
-            if (!lunch) throw `Never heard of ${name} :man-shrugging:`;
-
-            await update(message.channel, store => ({
-                ...store,
-                today: {
-                    ...store.today,
-                    option: lunch,
-                },
-            }));
-
-            return `Lunch overridden to ${lunch.icon ? `${lunch.icon} ` : ''}*${
-                lunch.name
-            }*!`;
-        })
-            .desc("Override today's lunch option")
-            .arg({ name: 'option-name', required: true })
-            .admin()
-    )
-    .nest(
         Command.sub('reroll', async message => {
             await rollover(message.channel);
             let { today } = await load(message.channel);
@@ -138,7 +104,7 @@ Command.create('lunch', async message => {
                 await cancel(message.channel);
                 CommandRunner.run('lunch', message);
             }
-        })
+        }).desc("Vote to reroll today's chosen lunch")
     )
     .nest(
         Command.sub('override', async (message, args) => {

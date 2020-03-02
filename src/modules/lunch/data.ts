@@ -52,6 +52,7 @@ export const cancel = (channel: Channel) =>
         ...store,
         today: {
             ...store.today,
+            rerollVoters: [],
             option: null,
         },
         history: [...store.history, { ...store.today, successful: false }],

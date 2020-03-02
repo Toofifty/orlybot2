@@ -22,7 +22,7 @@ export const listTrain = Command.sub('who', async message => {
 
     if (!today.option) {
         message.reply(
-            "Hmmm... we haven't picked a restaurant yet. Ask me `whats for lunch?` and I'll choose one."
+            "Hmmm... we haven't picked a restaurant yet. Ask me `what's for lunch?` and I'll choose one."
         );
     }
 })
