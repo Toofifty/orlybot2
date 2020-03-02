@@ -199,7 +199,10 @@ export default class Command {
      * command matches the first pass (key lookup).
      */
     public matches(message: Message): boolean {
-        if (this.phrase && message.text.includes(this.keyword)) {
+        if (
+            this.phrase &&
+            message.text.toLowerCase().startsWith(this.keyword.toLowerCase())
+        ) {
             return true;
         }
 
