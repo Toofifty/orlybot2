@@ -16,7 +16,7 @@ export const listOptions = Command.sub('options', async message => {
             ...option,
             weight: weight(option, history, today, userPreferences),
         }))
-        .sort((a, b) => (a.name > b.name ? 1 : -1));
+        .sort((a, b) => (a.weight > b.weight ? 1 : -1));
 
     const totalWeight = weightedOptions.reduce(
         (total, option) => total + option.weight,
@@ -117,8 +117,8 @@ export const editOption = Command.sub(
             })),
             options: [
                 ...store.options.filter(
-                    option =>
-                        option.name.toLowerCase() !== oldName.toLowerCase()
+                    ({ name }) =>
+                        name.toLowerCase() !== option.name.toLowerCase()
                 ),
                 newOption,
             ],
