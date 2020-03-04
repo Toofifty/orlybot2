@@ -103,7 +103,7 @@ export const leaveTrain = Command.sub('leave', async message => {
         },
     }));
 
-    return `${message.user} left the lunc train :cry:`;
+    return `${message.user} left the lunch train :cry:`;
 }).desc('Leave the lunchtrain :(');
 
 export const kickTrain = Command.sub('kick', async (message, [user]) => {
