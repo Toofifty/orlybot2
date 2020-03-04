@@ -78,9 +78,10 @@ export const removeOption = Command.sub(
         if (index === -1) throw `Couldn't find lunch option *${name}*`;
 
         const option = options[index];
+        options.splice(index, 1);
         await update(message.channel, store => ({
             ...store,
-            options: options.splice(index, 1),
+            options,
         }));
 
         return `Removed _${option.category}_ lunch option: *${option.name}`;
