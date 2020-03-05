@@ -18,3 +18,6 @@ export const camel = replaceKeys(str =>
         .toLowerCase()
         .replace(/[^a-zA-Z0-9]+(.)/g, (_, chr) => chr.toUpperCase())
 );
+
+export const capitalise = (str: string) =>
+    str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();

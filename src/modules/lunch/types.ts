@@ -32,3 +32,15 @@ export interface LunchStore {
     categories: string[];
     userPreferences: Record<string, LunchPreferences>;
 }
+
+export interface WeightBreakdown {
+    daysSinceLastVisit?: number;
+    actualDaysSinceLastVisit?: number;
+    daysSinceLastCategoryVisit?: number;
+    actualDaysSinceLastCategoryVisit?: number;
+    weightBasedOnHistory?: number;
+    failsRequiredPreferences?: string;
+    matchesOptionalPreferences?: string;
+    optionalPreferenceMultiplier?: number;
+    finalWeight?: number;
+}

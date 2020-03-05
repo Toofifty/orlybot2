@@ -3,6 +3,7 @@ import {
     LunchRecord,
     WeightedOption,
     LunchPreferences,
+    WeightBreakdown,
 } from './types';
 import { intersect } from 'core/util/array';
 
@@ -36,7 +37,8 @@ export const weight = (
     target: LunchOption,
     history: LunchRecord[],
     today: LunchRecord,
-    userPreferences: Record<string, LunchPreferences>
+    userPreferences: Record<string, LunchPreferences>,
+    breakdown?: WeightBreakdown
 ): number => {
     const visits = history
         .filter(({ option }) => option?.name === target.name)
@@ -48,6 +50,13 @@ export const weight = (
         days(now - new Date((visits[0] || {}).date).getTime()) ||
         20 * Math.random();
 
+    if (breakdown) {
+        breakdown.daysSinceLastVisit = daysSinceLastVisit;
+        breakdown.actualDaysSinceLastVisit = days(
+            now - new Date((visits[0] || {}).date).getTime()
+        );
+    }
+
     const categoryVisits = history
         .filter(({ option }) => option?.category === target.category)
         .sort(sortDate);
@@ -56,7 +65,18 @@ export const weight = (
         days(now - new Date((categoryVisits[0] || {}).date).getTime()) ||
         20 * Math.random();
 
+    if (breakdown) {
+        breakdown.daysSinceLastCategoryVisit = daysSinceLastCategory;
+        breakdown.actualDaysSinceLastCategoryVisit = days(
+            now - new Date((categoryVisits[0] || {}).date).getTime()
+        );
+    }
+
     let weight = daysSinceLastVisit + daysSinceLastCategory / 4;
+
+    if (breakdown) {
+        breakdown.weightBasedOnHistory = weight;
+    }
 
     if (today.participants.length > 0) {
         const preferences = today.participants.reduce((prefs, id) => {
@@ -78,11 +98,21 @@ export const weight = (
             required.length > 0 &&
             intersect(target.attributes ?? [], required).length === 0
         ) {
+            if (breakdown) {
+                breakdown.failsRequiredPreferences = required.join(', ');
+            }
             // have requirements, no attributes match!
             return 0;
         }
 
         if (intersect(target.attributes ?? [], optional).length > 0) {
+            if (breakdown) {
+                breakdown.matchesOptionalPreferences = intersect(
+                    target.attributes ?? [],
+                    optional
+                ).join(', ');
+                breakdown.optionalPreferenceMultiplier = 2;
+            }
             // bump up preferred options
             weight *= 2;
         }
