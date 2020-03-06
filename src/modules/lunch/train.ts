@@ -146,10 +146,12 @@ export const depart = Command.sub('depart', async (message, [...time]) => {
     );
 
     setTimeout(() => {
-        `Choo choo! The lunch train is departing! \n${LUNCH_TRAIN}${today.participants
-            .map(mention)
-            .join(':railway_car:')}:railway_car:`;
-    }, dayjs().diff(departureTime));
+        message.reply(
+            `Choo choo! The lunch train is departing! \n${LUNCH_TRAIN}${today.participants
+                .map(mention)
+                .join(':railway_car:')}:railway_car:`
+        );
+    }, departureTime.diff(dayjs()));
 })
     .desc('Tell the lunch train to depart')
     .arg({ name: 'time', def: 'in 5 minutes' });
