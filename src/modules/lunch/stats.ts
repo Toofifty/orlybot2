@@ -22,7 +22,7 @@ export const optionStats = Command.sub('stats', async (message, [name]) => {
     breakdown.finalWeight = w;
 
     return (
-        `Breakdown for ${print(option)} (${w.toFixed(2)}%):\n` +
+        `Breakdown for ${print(option)} (${w.toFixed(2)} points):\n` +
         Object.keys(breakdown)
             .map(key => {
                 const value =

@@ -98,7 +98,7 @@ Command.create('lunch', async message => {
             message.reply(
                 `${message.user} voted to reroll today's lunch ${
                     today.rerollVoters?.length
-                }/${Math.ceil(today.participants.length / 2)}`
+                }/${Math.ceil(today.participants.length / 2) + 1}`
             );
 
             if (
