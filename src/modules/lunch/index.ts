@@ -23,7 +23,7 @@ import {
     removePreference,
 } from './preferences';
 import { listAttributes, addAttribute, removeAttribute } from './attributes';
-import { optionStats } from './stats';
+import { optionStats, lunchHistory } from './stats';
 
 Command.create('lunch', async message => {
     await rollover(message.channel);
@@ -154,6 +154,7 @@ Command.create('lunch', async message => {
     .nest(removeOption)
     .nest(editOption)
     .nest(optionStats)
+    .nest(lunchHistory)
     // categories
     .nest(listCategories)
     .nest(addCategory)
