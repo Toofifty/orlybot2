@@ -48,7 +48,7 @@ export const weight = (
 
     const daysSinceLastVisit =
         days(now - new Date((visits[0] || {}).date).getTime()) ||
-        20 * Math.random();
+        20 + 10 * Math.random();
 
     if (breakdown) {
         breakdown.daysSinceLastVisit = daysSinceLastVisit;
@@ -63,7 +63,7 @@ export const weight = (
 
     const daysSinceLastCategory =
         days(now - new Date((categoryVisits[0] || {}).date).getTime()) ||
-        20 * Math.random();
+        20 + 10 * Math.random();
 
     if (breakdown) {
         breakdown.daysSinceLastCategoryVisit = daysSinceLastCategory;
