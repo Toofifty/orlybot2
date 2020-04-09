@@ -148,12 +148,13 @@ Command.create('trivia', async (message, [diff = 'easy']) => {
                         user.meta<number>('trivia_wins') -
                         (user.meta<number>('trivia_bad_guesses') ?? 0),
                     ratio: (
-                        user.meta<number>('trivia_wins') /
-                            (user.meta<number>('trivia_bad_guesses') ?? 0) +
-                        user.meta<number>('trivia_wins') * 100
-                    ).toFixed(1),
+                        (user.meta<number>('trivia_wins') /
+                            ((user.meta<number>('trivia_bad_guesses') ?? 0) +
+                                user.meta<number>('trivia_wins') || 1)) *
+                        100
+                    ).toFixed(0),
                 }))
-                .sort((a, b) => (a.score > b.score ? 1 : 0));
+                .sort((a, b) => (a.score < b.score ? 1 : 0));
 
             return `*Trivia Leaderboard*\n${active
                 .map(
