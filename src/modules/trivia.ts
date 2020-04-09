@@ -135,4 +135,33 @@ Command.create('trivia', async (message, [diff = 'easy']) => {
         })
             .desc("Get a user's trivia score")
             .arg({ name: 'user', def: 'you' })
+    )
+    .nest(
+        Command.sub('leaderboard', async () => {
+            const users = await User.all();
+
+            const active = users
+                .filter(user => user.meta<number>('trivia_wins') > 0)
+                .map(user => ({
+                    user,
+                    score:
+                        user.meta<number>('trivia_wins') -
+                        (user.meta<number>('trivia_bad_guesses') ?? 0),
+                    ratio: (
+                        user.meta<number>('trivia_wins') /
+                            (user.meta<number>('trivia_bad_guesses') ?? 0) +
+                        user.meta<number>('trivia_wins') * 100
+                    ).toFixed(1),
+                }))
+                .sort((a, b) => (a.score > b.score ? 1 : 0));
+
+            return `*Trivia Leaderboard*\n${active
+                .map(
+                    ({ user, score, ratio }, i) =>
+                        `${i + 1}. ${user} - ${score} points (${ratio}%)`
+                )
+                .join('\n')}`;
+        })
+            .alias('lb', 'l')
+            .desc('Check out the trivia leaderboard')
     );

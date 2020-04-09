@@ -26,6 +26,12 @@ class Database {
                 .then(callback)
         );
     }
+
+    public async all<T>(): Promise<T[]> {
+        return (await this.db.allDocs({ include_docs: true })).rows
+            .map(({ doc }) => doc)
+            .filter(Boolean) as any;
+    }
 }
 
 const db = new Database('data');

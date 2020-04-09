@@ -67,6 +67,14 @@ export default class User extends DbModel {
         return await this.from(dbUser);
     }
 
+    public static async all(): Promise<User[]> {
+        return Promise.all(
+            (await db.all<any>())
+                .filter(({ _id }) => _id.startsWith('user'))
+                .map(data => User.from(data))
+        );
+    }
+
     /**
      * Get a tag to mention the user.
      */
@@ -109,7 +117,7 @@ export default class User extends DbModel {
      * Use `deleteMeta()` to set a meta value to
      * undefined.
      */
-    public meta(key: string, data?: unknown): unknown {
+    public meta<T>(key: string, data?: T): T {
         if (data !== undefined) {
             if (typeof data === 'function') {
                 // set data via callback
