@@ -35,3 +35,8 @@ Command.create('commands')
             .desc('Show all disabled commands')
             .admin()
     );
+
+Command.create('reboot', message => {
+    message.reply('Rebooting!');
+    exec('pm2 restart mathobot');
+}).admin();

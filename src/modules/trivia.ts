@@ -126,6 +126,12 @@ Command.create('trivia', async (message, [diff = 'easy']) => {
     .desc('Start a game of trivia!')
     .arg({ name: 'difficulty', def: 'easy' })
     .nest(
+        Command.sub('cancel', async message => {
+            teardown(message.channel.id);
+            message.reply('Cancelled trivia');
+        }).desc('Cancel broken trivia')
+    )
+    .nest(
         Command.sub('score', async (message, [user]) => {
             const target = user ? await User.find(user) : message.user;
 
