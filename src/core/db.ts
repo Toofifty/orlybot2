@@ -13,7 +13,7 @@ class Database {
     }
 
     public async put<T>(data: T) {
-        return this.db.put(data, { force: true }).catch(logerror);
+        return this.db.put(data, { force: true }).catch(e => logerror(e, data));
     }
 
     public async update<T>(
@@ -23,7 +23,10 @@ class Database {
         return this.put(
             await this.get<T>(key)
                 .then(obj => ({ ...obj, _id: key }))
-                .then(callback)
+                .then((data: T & { _id: string }) => ({
+                    ...data,
+                    ...callback(data),
+                }))
         );
     }
 

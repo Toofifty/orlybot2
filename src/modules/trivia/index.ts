@@ -3,6 +3,9 @@ import fetch from 'node-fetch';
 import { randint, choose } from 'core/util';
 import Message from 'core/model/message';
 import User from 'core/model/user';
+import db from 'core/db';
+import Channel from 'core/model/channel';
+import { fetchQuestion } from './fetch';
 
 interface Trivia {
     question: string;
@@ -11,12 +14,16 @@ interface Trivia {
     answerId: number;
 }
 
-interface ApiQuestion {
-    category: string;
-    question: string;
-    correct_answer: string;
-    incorrect_answers: string[];
+interface Category {
+    id: number;
+    name: string;
 }
+
+interface TriviaStore {
+    enabledCategories: number[];
+}
+
+let categories: Category[] = [];
 
 const currentTrivias: Record<string, Trivia> = {};
 
@@ -30,6 +37,10 @@ const correct = (channel: string) => (message: Message) => {
             `Good stuff ${message.user}! That's ${wins} wins so far.`,
             `You're on fire ${message.user}! ${wins} total wins!`,
             `Slow down ${message.user} and let other people have a chance! You're on ${wins} wins.`,
+            `Amazing! ${message.user} got it! You're on ${wins} wins.`,
+            `lol grats ${message.user} ur now on ${wins} dubs`,
+            `Ding ding ding ding! ${message.user} is on ${wins} wins.`,
+            `👌😎 good 😠🤣😂 stuff 😍🎁 ${message.user} 👏👏 win 💸🤑 #${wins} 💵💰`,
         ])
     );
     teardown(message.channel.id);
@@ -53,6 +64,7 @@ const incorrect = (channel: string) => (message: Message) => {
             `Better luck next time ${message.user}!`,
             `Pfft. Try a bit harder ${message.user}.`,
             `${message.user}...\nno.`,
+            `lol no ${message.user} u noob`,
         ])
     );
 };
@@ -81,26 +93,58 @@ const teardown = (channel: string) => {
     delete currentTrivias[channel];
 };
 
-Command.create('trivia', async (message, [diff = 'easy']) => {
+const allCategories = async () => {
+    if (categories.length === 0) {
+        const data = await fetch(
+            `https://opentdb.com/api_category.php`
+        ).then(res => res.json());
+
+        categories = data.trivia_categories;
+    }
+
+    return categories;
+};
+
+export const load = async (channel: Channel): Promise<TriviaStore> => {
+    const data = await db.get<TriviaStore>(`trivia:${channel.id}`);
+    if (!data) {
+        update(channel, store => ({
+            enabledCategories: [],
+            ...store,
+        }));
+        return load(channel);
+    }
+    return data;
+};
+
+export const update = (
+    channel: Channel,
+    callback: (data: TriviaStore) => TriviaStore
+) => db.update(`trivia:${channel.id}`, callback);
+
+Command.create('trivia', async (message, [difficulty = 'easy']) => {
+    if (!['hard', 'medium', 'easy'].includes(difficulty)) {
+        throw 'Invalid difficulty';
+    }
+
     if (currentTrivias[message.channel.id]) {
         return currentTrivias[message.channel.id].question;
     }
 
-    let question: string = '';
-    let data: any;
-
-    while (!question || question.includes('&')) {
-        data = await fetch(
-            `https://opentdb.com/api.php?amount=1&difficulty=${diff}`
-        ).then(res => res.json());
-        question = data.results[0].question;
-    }
+    const { enabledCategories } = await load(message.channel);
+    const categories = await allCategories();
 
     const {
+        question,
         category,
-        correct_answer: correctAnswer,
-        incorrect_answers: incorrectAnswers,
-    }: ApiQuestion = data.results[0];
+        correctAnswer,
+        incorrectAnswers,
+    } = await fetchQuestion({
+        categories: categories
+            .filter(cat => enabledCategories.includes(cat.id))
+            .map(({ name }) => name),
+        difficulty,
+    });
 
     message.reply(`${category}: *${question}*`);
 
@@ -171,4 +215,73 @@ Command.create('trivia', async (message, [diff = 'easy']) => {
         })
             .alias('lb', 'l')
             .desc('Check out the trivia leaderboard')
+    )
+    .nest(
+        Command.sub('list-categories', async message => {
+            const { enabledCategories } = await load(message.channel);
+            return `Available trivia categories:\n${(await allCategories())
+                .map(({ name }) => name)
+                .join(', ')}${
+                enabledCategories.length > 0
+                    ? `\nEnabled:\n${(await allCategories())
+                          .filter(cat => enabledCategories.includes(cat.id))
+                          .map(({ name }) => `*${name}*`)
+                          .join(', ')}`
+                    : ''
+            }`;
+        })
+            .alias('lc')
+            .desc('List available trivia categories')
+    )
+    .nest(
+        Command.sub('disable-category', async (message, [name]) => {
+            const { enabledCategories } = await load(message.channel);
+            const target = (await allCategories()).find(cat =>
+                cat.name.toLowerCase().includes(name.toLowerCase())
+            );
+
+            if (!target) {
+                throw 'Unknown category';
+            }
+
+            if (!enabledCategories.includes(target.id)) {
+                throw 'Category is not enabled';
+            }
+
+            update(message.channel, store => ({
+                enabledCategories: store.enabledCategories.filter(
+                    cat => target.id !== cat
+                ),
+            }));
+
+            return `Disabled category *${target.name}*`;
+        })
+            .alias('dc')
+            .arg({ name: 'category', required: true })
+            .desc('Disable a trivia category for the channel')
+    )
+    .nest(
+        Command.sub('enable-category', async (message, [name]) => {
+            const { enabledCategories } = await load(message.channel);
+            const target = (await allCategories()).find(cat =>
+                cat.name.toLowerCase().includes(name.toLowerCase())
+            );
+
+            if (!target) {
+                throw 'Unknown category';
+            }
+
+            if (enabledCategories.includes(target.id)) {
+                throw 'Category is already enabled';
+            }
+
+            update(message.channel, store => ({
+                enabledCategories: [...store.enabledCategories, target.id],
+            }));
+
+            return `Enabled category *${target.name}*`;
+        })
+            .alias('ec')
+            .arg({ name: 'category', required: true })
+            .desc('Enable a trivia category for the channel')
     );
