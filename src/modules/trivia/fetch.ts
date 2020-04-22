@@ -24,7 +24,9 @@ const fetchQuestions = (
 ): Promise<ApiQuestion[]> =>
     fetch(
         `https://opentdb.com/api.php?amount=${FETCH_AMOUNT}&difficulty=${options.difficulty}`
-    ).then(res => res.json());
+    )
+        .then(res => res.json())
+        .then(res => res.results);
 
 const clean = (result: ApiQuestion) => ({
     question: he.decode(result.question),

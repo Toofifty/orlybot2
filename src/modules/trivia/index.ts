@@ -131,6 +131,8 @@ Command.create('trivia', async (message, [difficulty = 'easy']) => {
         return currentTrivias[message.channel.id].question;
     }
 
+    message.replyEphemeral('Fetching trivia question, hold on...');
+
     const { enabledCategories } = await load(message.channel);
     const categories = await allCategories();
 
