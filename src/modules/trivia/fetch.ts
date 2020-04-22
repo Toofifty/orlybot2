@@ -1,4 +1,5 @@
 import he from 'he';
+import fetch from 'node-fetch';
 
 interface ApiQuestion {
     category: string;
