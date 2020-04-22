@@ -21,52 +21,61 @@ interface Category {
 
 interface TriviaStore {
     enabledCategories: number[];
+    noReply: boolean;
 }
 
 let categories: Category[] = [];
 
 const currentTrivias: Record<string, Trivia> = {};
 
-const correct = (channel: string) => (message: Message) => {
+const correct = (channel: string) => async (message: Message) => {
     if (message.channel.id !== channel) return;
     const wins = message.user.meta('trivia_wins', (w: number) => (w ?? 0) + 1);
-    message.reply(
-        choose([
-            `Well hot dog! We have a weiner! You win ${message.user}! You're on ${wins} wins.`,
-            `You got it ${message.user}! You've won ${wins} trivias.`,
-            `Good stuff ${message.user}! That's ${wins} wins so far.`,
-            `You're on fire ${message.user}! ${wins} total wins!`,
-            `Slow down ${message.user} and let other people have a chance! You're on ${wins} wins.`,
-            `Amazing! ${message.user} got it! You're on ${wins} wins.`,
-            `lol grats ${message.user} ur now on ${wins} dubs`,
-            `Ding ding ding ding! ${message.user} is on ${wins} wins.`,
-            `👌😎 good 😠🤣😂 stuff 😍🎁 ${message.user} 👏👏 win 💸🤑 #${wins} 💵💰`,
-        ])
-    );
+    const { noReply } = await load(message.channel);
+    if (!noReply) {
+        message.reply(
+            choose([
+                `Well hot dog! We have a weiner! You win ${message.user}! You're on ${wins} wins.`,
+                `You got it ${message.user}! You've won ${wins} trivias.`,
+                `Good stuff ${message.user}! That's ${wins} wins so far.`,
+                `You're on fire ${message.user}! ${wins} total wins!`,
+                `Slow down ${message.user} and let other people have a chance! You're on ${wins} wins.`,
+                `Amazing! ${message.user} got it! You're on ${wins} wins.`,
+                `lol grats ${message.user} ur now on ${wins} dubs`,
+                `Ding ding ding ding! ${message.user} is on ${wins} wins.`,
+                `👌😎 good 😠🤣😂 stuff 😍🎁 ${message.user} 👏👏 win 💸🤑 #${wins} 💵💰`,
+            ])
+        );
+    }
+    message.addReaction('white_check_mark');
     teardown(message.channel.id);
 };
 
-const incorrect = (channel: string) => (message: Message) => {
+const incorrect = (channel: string) => async (message: Message) => {
     if (message.channel.id !== channel) return;
     message.user.meta('trivia_bad_guesses', (g: number) => (g ?? 0) + 1);
-    message.reply(
-        choose([
-            `I don't think that's right ${message.user} :/`,
-            `Not even close ${message.user}!`,
-            `Wayyy off ${message.user}`,
-            `${message.user} - nope.`,
-            `${message.user} - nada.`,
-            `${message.user} - no bueno.`,
-            `HA! Yeah right, ${message.user}`,
-            `Well done ${message.user}! You got it completely wrong!`,
-            `Serious ${message.user}? That's your answer?`,
-            `Try again ${message.user}.`,
-            `Better luck next time ${message.user}!`,
-            `Pfft. Try a bit harder ${message.user}.`,
-            `${message.user}...\nno.`,
-            `lol no ${message.user} u noob`,
-        ])
-    );
+    const { noReply } = await load(message.channel);
+    if (!noReply) {
+        message.reply(
+            choose([
+                `I don't think that's right ${message.user} :/`,
+                `Not even close ${message.user}!`,
+                `Wayyy off ${message.user}`,
+                `${message.user} - nope.`,
+                `${message.user} - nada.`,
+                `${message.user} - no bueno.`,
+                `HA! Yeah right, ${message.user}`,
+                `Well done ${message.user}! You got it completely wrong!`,
+                `Serious ${message.user}? That's your answer?`,
+                `Try again ${message.user}.`,
+                `Better luck next time ${message.user}!`,
+                `Pfft. Try a bit harder ${message.user}.`,
+                `${message.user}...\nno.`,
+                `lol no ${message.user} u noob`,
+            ])
+        );
+    }
+    message.addReaction('x');
 };
 
 const setup = (channel: string, trivia: Trivia) => {
@@ -110,6 +119,7 @@ export const load = async (channel: Channel): Promise<TriviaStore> => {
     if (!data) {
         update(channel, store => ({
             enabledCategories: [],
+            noReply: false,
             ...store,
         }));
         return load(channel);
@@ -119,7 +129,7 @@ export const load = async (channel: Channel): Promise<TriviaStore> => {
 
 export const update = (
     channel: Channel,
-    callback: (data: TriviaStore) => TriviaStore
+    callback: (data: TriviaStore) => Partial<TriviaStore>
 ) => db.update(`trivia:${channel.id}`, callback);
 
 Command.create('trivia', async (message, [difficulty = 'easy']) => {
@@ -286,4 +296,18 @@ Command.create('trivia', async (message, [difficulty = 'easy']) => {
             .alias('ec')
             .arg({ name: 'category', required: true })
             .desc('Enable a trivia category for the channel')
+    )
+    .nest(
+        Command.sub('disable-replies', async message => {
+            update(message.channel, () => ({ noReply: true }));
+
+            message.replyEphemeral('Disabled trivia replies');
+        }).desc('Disable trivia replies')
+    )
+    .nest(
+        Command.sub('enable-replies', async message => {
+            update(message.channel, () => ({ noReply: false }));
+
+            message.replyEphemeral('Enabled trivia replies');
+        }).desc('Enable trivia replies')
     );

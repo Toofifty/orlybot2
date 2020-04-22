@@ -191,6 +191,14 @@ export default class Message extends BaseModel {
         return this.replyEphemeral(`:bangbang:  ${text}`);
     }
 
+    public async addReaction(reaction: string) {
+        await bot._react({
+            name: reaction,
+            channel: this.channel.id,
+            timestamp: this.ts,
+        });
+    }
+
     /**
      * Get a single-line representation of the whole message
      * for logging.

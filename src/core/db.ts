@@ -18,7 +18,7 @@ class Database {
 
     public async update<T>(
         key: string,
-        callback: (data: T & { _id: string }) => T
+        callback: (data: T & { _id: string }) => Partial<T>
     ) {
         return this.put(
             await this.get<T>(key)
