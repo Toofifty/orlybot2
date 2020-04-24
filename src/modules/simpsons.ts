@@ -1,8 +1,13 @@
 import fetch from 'node-fetch';
 import { Command } from 'core/commands';
 
-Command.create('simpsons')
+Command.create(
+    'simpsons',
+    () =>
+        'Use `simpsons quote <term> [options]` to get a script excerpt, of `simpsons gif [term] [options]` to generate a gif'
+)
     .alias('s')
+    .desc('Simpsons API')
     .nest(
         Command.sub('quote', async (message, [term, ...args]) => {
             const data = await fetch(
@@ -27,6 +32,10 @@ Command.create('simpsons')
             );
             message.reply(excerpt.map(quote => quote.text).join('\n'));
         })
+            .alias('q')
+            .desc('Get a script excerpt matching the given search term')
+            .arg({ name: 'term', required: true })
+            .arg({ name: '...options' })
     )
     .nest(
         Command.sub('gif', async (message, args) => {
@@ -41,4 +50,8 @@ Command.create('simpsons')
             }
             message.reply(data.data.url);
         })
+            .alias('g')
+            .desc('Generate a gif snippet from the Simpsons')
+            .arg({ name: 'term', required: false })
+            .arg({ name: '...options' })
     );
