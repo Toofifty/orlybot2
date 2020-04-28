@@ -2,6 +2,7 @@ import 'dotenv/config';
 
 import 'core/bot';
 
+import 'modules/articulate';
 import 'modules/cleverbot';
 import 'modules/jokes';
 import 'modules/lunch';

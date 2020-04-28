@@ -247,7 +247,7 @@ Command.create('trivia', async (message, [difficulty = 'easy']) => {
                 )
                 .join('\n')}`;
         })
-            .alias('lb', 'l')
+            .alias('lb', 'l', 'scoreboard', 'sb', 's')
             .desc('Check out the trivia leaderboard')
     )
     .nest(

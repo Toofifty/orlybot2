@@ -68,6 +68,11 @@ export default class Command {
     public phrase: boolean;
 
     /**
+     * Partial mode: matches if the keyword is anywhere in the message
+     */
+    public partial: boolean;
+
+    /**
      * Parent command instance, if this is a subcommand.
      */
     public parent?: Command;
@@ -165,6 +170,13 @@ export default class Command {
     }
 
     /**
+     * Put the command in partial mode.
+     */
+    public isPartial(partial: boolean = true) {
+        return this.set({ partial });
+    }
+
+    /**
      * Add one or more aliases that can be matched on the
      * second pass when resolving a command to run. If another
      * command has one of these aliases as it's keyword, it'll
@@ -202,6 +214,13 @@ export default class Command {
         if (
             this.phrase &&
             message.text.toLowerCase().startsWith(this.keyword.toLowerCase())
+        ) {
+            return true;
+        }
+
+        if (
+            this.partial &&
+            message.text.toLowerCase().includes(this.keyword.toLowerCase())
         ) {
             return true;
         }
