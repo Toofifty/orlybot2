@@ -6,12 +6,14 @@ import User from 'core/model/user';
 import db from 'core/db';
 import Channel from 'core/model/channel';
 import { fetchQuestion } from './fetch';
+import CommandRunner from 'core/commands/runner';
 
 interface Trivia {
     question: string;
     wrong: string[];
     answer: string;
     answerId: number;
+    difficulty: string;
 }
 
 interface Category {
@@ -22,6 +24,7 @@ interface Category {
 interface TriviaStore {
     enabledCategories: number[];
     noReply: boolean;
+    autostart: boolean;
 }
 
 let categories: Category[] = [];
@@ -48,7 +51,7 @@ const correct = (channel: string) => async (message: Message) => {
         );
     }
     message.addReaction('white_check_mark');
-    teardown(message.channel.id);
+    teardown(message);
 };
 
 const incorrect = (channel: string) => async (message: Message) => {
@@ -93,13 +96,18 @@ const setup = (channel: string, trivia: Trivia) => {
         .hide();
 };
 
-const teardown = (channel: string) => {
-    const trivia = currentTrivias[channel];
+const teardown = async (message: Message) => {
+    const trivia = currentTrivias[message.channel.id];
 
     trivia.wrong.forEach(kw => registry.unregister(kw));
     registry.unregister(trivia.answer);
 
-    delete currentTrivias[channel];
+    delete currentTrivias[message.channel.id];
+
+    const { autostart } = await load(message.channel);
+    if (autostart) {
+        CommandRunner.run(`trivia ${trivia.difficulty}`, message);
+    }
 };
 
 const allCategories = async () => {
@@ -120,6 +128,7 @@ export const load = async (channel: Channel): Promise<TriviaStore> => {
         update(channel, store => ({
             enabledCategories: [],
             noReply: false,
+            autostart: false,
             ...store,
         }));
         return load(channel);
@@ -141,7 +150,15 @@ Command.create('trivia', async (message, [difficulty = 'easy']) => {
         return currentTrivias[message.channel.id].question;
     }
 
-    message.replyEphemeral('Fetching trivia question, hold on...');
+    message.replyEphemeral('Fetching new trivia question, hold on...');
+
+    currentTrivias[message.channel.id] = {
+        question: 'loading...',
+        wrong: [],
+        answer: 'loading...',
+        answerId: -1,
+        difficulty,
+    };
 
     const { enabledCategories } = await load(message.channel);
     const categories = await allCategories();
@@ -158,13 +175,14 @@ Command.create('trivia', async (message, [difficulty = 'easy']) => {
         difficulty,
     });
 
-    message.reply(`${category}: *${question}*`);
+    message.reply(`${category} (${difficulty}): *${question}*`);
 
     const trivia = {
         answerId: randint(4),
         answer: correctAnswer.toLowerCase(),
         wrong: incorrectAnswers.map(v => v.toLowerCase()),
         question,
+        difficulty,
     };
 
     const options = incorrectAnswers;
@@ -183,7 +201,11 @@ Command.create('trivia', async (message, [difficulty = 'easy']) => {
     .arg({ name: 'difficulty', def: 'easy' })
     .nest(
         Command.sub('cancel', async message => {
-            teardown(message.channel.id);
+            await update(message.channel, store => ({
+                ...store,
+                autostart: false,
+            }));
+            await teardown(message);
             message.reply('Cancelled trivia');
         }).desc('Cancel broken trivia')
     )
@@ -310,4 +332,18 @@ Command.create('trivia', async (message, [difficulty = 'easy']) => {
 
             message.replyEphemeral('Enabled trivia replies');
         }).desc('Enable trivia replies')
+    )
+    .nest(
+        Command.sub('enable-autostart', async message => {
+            update(message.channel, () => ({ autostart: true }));
+            message.replyEphemeral('Enabled autostart');
+        }).desc(
+            'Auto-start a new trivia question after the previous is answers'
+        )
+    )
+    .nest(
+        Command.sub('disable-autostart', async message => {
+            update(message.channel, () => ({ autostart: false }));
+            message.replyEphemeral('Disabled autostart');
+        }).desc('Disable trivia autostart')
     );
