@@ -159,7 +159,7 @@ export const numbers = Command.sub(
             message.reply(
                 `Time's up!${firstMessage}${
                     players.length > 0
-                        ? `Followed by ${players
+                        ? `Points also awarded to: ${players
                               .map(
                                   player =>
                                       `${mention(player.id)} (*+${diffPoints(
