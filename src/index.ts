@@ -4,6 +4,7 @@ import 'core/bot';
 
 import 'modules/articulate';
 import 'modules/cleverbot';
+import 'modules/countdown';
 import 'modules/jokes';
 import 'modules/lunch';
 import 'modules/meta';
