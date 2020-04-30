@@ -3,7 +3,7 @@ import { choose, shuffle } from 'core/util';
 import Message from 'core/model/message';
 import { numberEmoji, mention } from 'core/util/strings';
 import User from 'core/model/user';
-import { fetchWord } from './api';
+import { fetchWord, fetchBest } from './api';
 
 const VOWELS = 'aeiou';
 // letters duplicated to increase/decrease likelihood
@@ -89,7 +89,7 @@ export const letters = Command.sub(
                 .isPhrase()
         );
 
-        setTimeout(() => {
+        setTimeout(async () => {
             games[message.channel.id] = false;
             letters.forEach(letter => registry.unregister(letter));
             const players = Object.keys(submissions)
@@ -128,6 +128,10 @@ export const letters = Command.sub(
                     (total?: number) => (total ?? 0) + score
                 );
             });
+            const bestWord = await fetchBest(letters.join('').toLowerCase());
+            if (bestWord) {
+                message.reply(`The best I could come up with is *${bestWord}*`);
+            }
         }, GAME_DURATION * 60 * 1000);
     }
 )

@@ -31,3 +31,11 @@ export const fetchWord = async (word: string) => {
 
     return data;
 };
+
+export const fetchBest = async (letters: string) => {
+    const data: any = await fetch(
+        `http://www.anagramica.com/best/${letters}`
+    ).then(res => res.json());
+    if (data.best) return data.best[0];
+    return undefined;
+};
