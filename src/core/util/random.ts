@@ -21,3 +21,16 @@ export const shuffle = <T>(arr: T[]): T[] =>
         .map(a => ({ sort: Math.random(), value: a }))
         .sort((a, b) => a.sort - b.sort)
         .map(a => a.value);
+
+export const chooseWeighted = (list: Record<string, number>): string => {
+    const totalWeight = Object.values(list).reduce(
+        (acc, weight) => acc + weight,
+        0
+    );
+    let point = Math.random() * totalWeight;
+    for (const key of Object.keys(list)) {
+        if (point < list[key]) return key;
+        point -= list[key];
+    }
+    return Object.keys(list)[0];
+};

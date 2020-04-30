@@ -4,11 +4,39 @@ import Message from 'core/model/message';
 import { numberEmoji, mention } from 'core/util/strings';
 import User from 'core/model/user';
 import { fetchWord, fetchBest } from './api';
+import { chooseWeighted } from 'core/util/random';
 
-const VOWELS = 'aeiou';
-// letters duplicated to increase/decrease likelihood
-// (q, v, x, z can be annoying)
-const CONSONANTS = 'bbccddffgghhjkkllmmnnppqrrrssstttvwwxyyz';
+const VOWELS_WEIGHTED = {
+    a: 8.12,
+    e: 12.02,
+    i: 7.31,
+    o: 7.68,
+    u: 2.88,
+};
+
+const CONSONANTS_WEIGHTED = {
+    b: 1.49,
+    c: 2.71,
+    d: 4.32,
+    f: 2.3,
+    g: 2.03,
+    h: 5.92,
+    j: 0.1,
+    k: 0.69,
+    l: 3.98,
+    m: 2.61,
+    n: 6.95,
+    p: 1.82,
+    q: 0.11,
+    r: 6.02,
+    s: 6.28,
+    t: 9.1,
+    v: 1.11,
+    w: 2.09,
+    x: 0.17,
+    y: 2.11,
+    z: 0.07,
+};
 
 // game duration (minutes)
 const GAME_DURATION = 1;
@@ -49,11 +77,11 @@ export const letters = Command.sub(
 
         const letters = Array(nVowels)
             .fill('')
-            .map(() => choose(VOWELS))
+            .map(() => chooseWeighted(VOWELS_WEIGHTED))
             .concat(
                 Array(nConsonants)
                     .fill('')
-                    .map(() => choose(CONSONANTS))
+                    .map(() => chooseWeighted(CONSONANTS_WEIGHTED))
             );
 
         message.reply(

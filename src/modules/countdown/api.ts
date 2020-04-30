@@ -25,8 +25,6 @@ export const fetchWord = async (word: string) => {
         }
     ).then(res => res.json());
 
-    console.log(data);
-
     if (isInvalid(data)) {
         return undefined;
     }
