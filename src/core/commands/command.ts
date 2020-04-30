@@ -244,6 +244,14 @@ export default class Command {
             }
         }
 
+        if (
+            this.permission === CommandPermission.ADMIN &&
+            !message.user.isAdmin
+        ) {
+            message.replyEphemeral('No');
+            return;
+        }
+
         const result = await this.action(
             message,
             message.tokens.slice(step + 1)

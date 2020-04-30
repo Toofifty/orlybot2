@@ -11,7 +11,7 @@ type InvalidResponse = {
 };
 
 const isInvalid = (data: any): data is InvalidResponse => {
-    return data.success === false;
+    return data.success === false || data.word === undefined;
 };
 
 export const fetchWord = async (word: string) => {
@@ -24,6 +24,8 @@ export const fetchWord = async (word: string) => {
             },
         }
     ).then(res => res.json());
+
+    console.log(data);
 
     if (isInvalid(data)) {
         return undefined;

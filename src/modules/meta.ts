@@ -2,8 +2,8 @@ import { Command, registry } from 'core/commands';
 import { tag } from 'core/util';
 import { exec } from 'child_process';
 
-Command.create('commands')
-    .alias('cmd')
+Command.create('cmd')
+    .alias('commands')
     .desc('Manage commands')
     .nest(
         Command.sub('enable', (_, [keyword]) => {
@@ -34,9 +34,13 @@ Command.create('commands')
         )
             .desc('Show all disabled commands')
             .admin()
-    );
+    )
+    .admin()
+    .hide();
 
 Command.create('reboot', message => {
     message.reply('Rebooting!');
     exec('pm2 restart mathobot');
-}).admin();
+})
+    .admin()
+    .hide();
