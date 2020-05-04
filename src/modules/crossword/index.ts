@@ -190,18 +190,18 @@ Command.create('crossword', async (message, [n, dir, word]) => {
         crossword.answers[direction][answerIndex].toLowerCase()
     );
 })
-    .desc('Start a new crossword')
+    .desc('Submit a word in the crossword game')
     .alias('cw')
     .nest(
         Command.sub('nyt', async (message, [dow = 'monday']) => {
             const { crossword } = await load(message.channel);
 
-            // if (crossword) {
-            //     message.replyEphemeral(
-            //         'There is already a crossword running. Use `crossword print` to print it out again.'
-            //     );
-            //     return;
-            // }
+            if (crossword) {
+                message.replyEphemeral(
+                    'There is already a crossword running. Use `crossword print` to print it out again.'
+                );
+                return;
+            }
 
             message.replyEphemeral('Fetching NYT crossword, hold on...');
 
@@ -217,7 +217,9 @@ Command.create('crossword', async (message, [n, dir, word]) => {
             update(message.channel, () => ({ crossword: data }));
 
             await printGame(message, data);
-        }).desc('Start a crossword from The New York Times (hard)')
+        })
+            .desc('Start a crossword from The New York Times (hard)')
+            .arg({ name: 'dow', def: 'monday' })
     )
     .nest(
         Command.sub('print', async message => {
@@ -235,7 +237,7 @@ Command.create('crossword', async (message, [n, dir, word]) => {
             }
 
             await printGame(message, crossword, grid);
-        })
+        }).desc('Post the latest crossword again')
     )
     .nest(
         Command.sub('status', async message => {
@@ -246,5 +248,5 @@ Command.create('crossword', async (message, [n, dir, word]) => {
             return `The crossword is ${((100 * solved) / needed).toFixed(
                 0
             )}% complete.`;
-        })
+        }).desc('Get completion status of the latest crossword')
     );
