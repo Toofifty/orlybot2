@@ -5,7 +5,17 @@ import {
     ReactionRemovedData,
 } from 'core/event-types';
 import BaseModel from './base-model';
-import Message from './message';
+import Message, { SavedMessage } from './message';
+
+/**
+ * Serialised message for database storage.
+ */
+export type SavedBotMessage = {
+    ts: string;
+    text: string;
+    ok: boolean;
+    parent: SavedMessage;
+};
 
 export default class BotMessage extends BaseModel {
     public ts: string;
@@ -15,6 +25,14 @@ export default class BotMessage extends BaseModel {
 
     public static from(data: any) {
         return super.from(data) as Promise<BotMessage>;
+    }
+
+    protected async finalise(data: any) {
+        if (data.parent) {
+            this.parent = await Message.from(data.parent);
+        }
+
+        return this;
     }
 
     private on<T extends AllEvents>(
@@ -82,5 +100,36 @@ export default class BotMessage extends BaseModel {
             channel: this.parent.channel.id,
             text,
         });
+    }
+
+    public async pin() {
+        await bot._pin({
+            timestamp: this.ts,
+            channel: this.parent.channel.id,
+        });
+    }
+
+    public async unpin() {
+        await bot._unpin({
+            timestamp: this.ts,
+            channel: this.parent.channel.id,
+        });
+    }
+
+    public async replyInThread(message: string) {
+        await bot._message({
+            thread_ts: this.ts,
+            channel: this.parent.channel.id,
+            text: message,
+        });
+    }
+
+    public serialize(): SavedBotMessage {
+        return {
+            ts: this.ts,
+            text: this.text,
+            ok: this.ok,
+            parent: this.parent.serialize(),
+        };
     }
 }
