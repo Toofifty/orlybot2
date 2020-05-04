@@ -18,7 +18,7 @@ export default class BaseModel {
      */
     public set(data: Record<string, any>) {
         Object.entries(data).forEach(([k, v]) => {
-            if (typeof this[k] !== 'function') {
+            if (!this[k] || typeof this[k] !== 'function') {
                 this[k] = v;
             }
         });
