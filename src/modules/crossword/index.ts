@@ -186,9 +186,9 @@ Command.create('crossword', async (message, [n, dir, word]) => {
     }
 
     message.addReaction('x');
-    message.replyEphemeral(
-        crossword.answers[direction][answerIndex].toLowerCase()
-    );
+    // message.replyEphemeral(
+    //     crossword.answers[direction][answerIndex].toLowerCase()
+    // );
 })
     .desc('Submit a word in the crossword game')
     .alias('cw')
