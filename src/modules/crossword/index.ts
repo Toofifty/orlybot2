@@ -1,5 +1,6 @@
 import he from 'he';
 import fetch from 'node-fetch';
+import { writeFileSync } from 'fs';
 import { Command } from 'core/commands';
 import { pre, mention } from 'core/util';
 import BotMessage from 'core/model/bot-message';
@@ -7,7 +8,7 @@ import Message from 'core/model/message';
 import { load, update } from './data';
 import { CrosswordData } from './types';
 import { render } from './render';
-import { writeFileSync } from 'fs';
+import { testCustom } from './custom';
 
 /**
  * Plan
@@ -249,4 +250,5 @@ Command.create('crossword', async (message, [n, dir, word]) => {
                 0
             )}% complete.`;
         }).desc('Get completion status of the latest crossword')
-    );
+    )
+    .nest(testCustom);
