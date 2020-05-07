@@ -15,6 +15,7 @@ export type SavedBotMessage = {
     text: string;
     ok: boolean;
     parent: SavedMessage;
+    children: SavedBotMessage[];
 };
 
 export default class BotMessage extends BaseModel {
@@ -22,6 +23,7 @@ export default class BotMessage extends BaseModel {
     public text: string;
     public ok: boolean;
     public parent: Message;
+    public children: BotMessage[];
 
     public static from(data: any) {
         return super.from(data) as Promise<BotMessage>;
@@ -117,10 +119,16 @@ export default class BotMessage extends BaseModel {
     }
 
     public async replyInThread(message: string) {
-        await bot._message({
-            thread_ts: this.ts,
-            channel: this.parent.channel.id,
-            text: message,
+        return (
+            await BotMessage.from(
+                await bot._message({
+                    thread_ts: this.ts,
+                    channel: this.parent.channel.id,
+                    text: message,
+                })
+            )
+        ).set({
+            parent: this.parent,
         });
     }
 
@@ -130,6 +138,7 @@ export default class BotMessage extends BaseModel {
             text: this.text,
             ok: this.ok,
             parent: this.parent.serialize(),
+            children: (this.children ?? []).map(each => each.serialize()),
         };
     }
 }
