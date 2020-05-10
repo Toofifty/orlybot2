@@ -43,12 +43,20 @@ const printGame = async (
     await game.pin();
     await game.replyInThread(
         `*Across*\n${crossword.clues.across
-            .map(clue => he.decode(clue).trim())
+            .map((clue, i) => {
+                const decodedClue = he.decode(clue).trim();
+                const answerLen = crossword.answers.across[i].length;
+                return `${decodedClue} (${answerLen})`;
+            })
             .join('\n')}`
     );
     await game.replyInThread(
         `*Down*\n${crossword.clues.down
-            .map(clue => he.decode(clue).trim())
+            .map((clue, i) => {
+                const decodedClue = he.decode(clue).trim();
+                const answerLen = crossword.answers.down[i].length;
+                return `${decodedClue} (${answerLen})`;
+            })
             .join('\n')}`
     );
 
