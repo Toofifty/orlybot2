@@ -35,12 +35,10 @@ import { writeFileSync } from 'fs';
 const printGame = async (
     message: Message,
     crossword: CrosswordData,
-    complete:
-        | {
-              across: number[];
-              down: number[];
-          }
-        | undefined,
+    complete?: {
+        across: number[];
+        down: number[];
+    },
     filled?: string[]
 ) => {
     writeFileSync('crossword_latest.txt', JSON.stringify(crossword, null, 4));
