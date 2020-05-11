@@ -1,3 +1,4 @@
+import he from 'he';
 import { CrosswordData } from './types';
 
 export const render = (
@@ -77,3 +78,32 @@ export const render = (
     }
     return result;
 };
+
+const renderClues = (
+    type: string,
+    clues: string[],
+    answers: string[],
+    complete: number[]
+) =>
+    `*${type}*\n${clues
+        .map((clue, i) => {
+            const decodedClue = he.decode(clue).trim();
+            const answerLen = answers[i].length;
+            if (complete.includes(i)) {
+                return `~${decodedClue} (${answerLen})~`;
+            }
+            return `${decodedClue} (${answerLen})`;
+        })
+        .join('\n')}`;
+
+export const renderDown = (
+    downClues: string[],
+    downAnswers: string[],
+    downComplete: number[]
+) => renderClues('Down', downClues, downAnswers, downComplete);
+
+export const renderAcross = (
+    acrossClues: string[],
+    acrossAnswers: string[],
+    acrossComplete: number[]
+) => renderClues('Across', acrossClues, acrossAnswers, acrossComplete);

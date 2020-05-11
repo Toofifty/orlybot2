@@ -6,7 +6,7 @@ import BotMessage from 'core/model/bot-message';
 import Message from 'core/model/message';
 import { load, update } from './data';
 import { CrosswordData } from './types';
-import { render } from './render';
+import { render, renderAcross, renderDown } from './render';
 import { writeFileSync } from 'fs';
 
 /**
@@ -35,31 +35,33 @@ import { writeFileSync } from 'fs';
 const printGame = async (
     message: Message,
     crossword: CrosswordData,
+    complete?: {
+        across: number[];
+        down: number[];
+    },
     filled?: string[]
 ) => {
     writeFileSync('crossword_latest.txt', JSON.stringify(crossword, null, 4));
 
     const game = await message.reply(pre(render(crossword, filled)));
+
     await game.pin();
-    await game.replyInThread(
-        `*Across*\n${crossword.clues.across
-            .map((clue, i) => {
-                const decodedClue = he.decode(clue).trim();
-                const answerLen = crossword.answers.across[i].length;
-                return `${decodedClue} (${answerLen})`;
-            })
-            .join('\n')}`
+    const acrossClues = await game.replyInThread(
+        renderAcross(
+            crossword.clues.across,
+            crossword.answers.across,
+            complete?.across ?? []
+        )
     );
-    await game.replyInThread(
-        `*Down*\n${crossword.clues.down
-            .map((clue, i) => {
-                const decodedClue = he.decode(clue).trim();
-                const answerLen = crossword.answers.down[i].length;
-                return `${decodedClue} (${answerLen})`;
-            })
-            .join('\n')}`
+    const downClues = await game.replyInThread(
+        renderDown(
+            crossword.clues.down,
+            crossword.answers.down,
+            complete?.down ?? []
+        )
     );
 
+    game.children = [acrossClues, downClues];
     await update(message.channel, store => ({
         ...store,
         gameMessage: game.serialize(),
@@ -146,11 +148,33 @@ Command.create('crossword', async (message, [n, dir, word]) => {
         });
 
         // update crossword
-        const { grid, gameMessage, crossword, contributors } = await load(
-            message.channel
-        );
+        const {
+            grid,
+            gameMessage,
+            crossword,
+            contributors,
+            complete: completed,
+        } = await load(message.channel);
         const game = await BotMessage.from(gameMessage);
         game.edit(pre(render(crossword!, grid)));
+
+        const acrossComment = await BotMessage.from(game.children[0]);
+        acrossComment.edit(
+            renderAcross(
+                crossword!.clues.across,
+                crossword!.answers.across,
+                completed?.across ?? []
+            )
+        );
+
+        const downComment = await BotMessage.from(game.children[1]);
+        downComment.edit(
+            renderDown(
+                crossword!.clues.down,
+                crossword!.answers.down,
+                completed?.down ?? []
+            )
+        );
 
         // add points
         message.user.meta(
@@ -224,14 +248,16 @@ Command.create('crossword', async (message, [n, dir, word]) => {
 
             update(message.channel, () => ({ crossword: data }));
 
-            await printGame(message, data);
+            const { complete } = await load(message.channel);
+
+            await printGame(message, data, complete);
         })
             .desc('Start a crossword from The New York Times (hard)')
             .arg({ name: 'dow', def: 'monday' })
     )
     .nest(
         Command.sub('print', async message => {
-            const { crossword, gameMessage, grid } = await load(
+            const { crossword, complete, gameMessage, grid } = await load(
                 message.channel
             );
 
@@ -244,7 +270,7 @@ Command.create('crossword', async (message, [n, dir, word]) => {
                 oldGame.unpin();
             }
 
-            await printGame(message, crossword, grid);
+            await printGame(message, crossword, complete, grid);
         }).desc('Post the latest crossword again')
     )
     .nest(
