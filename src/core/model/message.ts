@@ -5,7 +5,7 @@ import bot from 'core/bot';
 import { tokenize, split } from 'core/util';
 import BotMessage from './bot-message';
 
-const CHANNEL_ALIAS_REGEX = /^<#(\w{9})(?:\|[\w-]+)?>:\s*/;
+const CHANNEL_ALIAS_REGEX = /^<#(\w{9,11})(?:\|[\w-]+)?>:\s*/;
 const USER_ALIAS_REGEX = /^<@(\w{9})(?:\|[\w-]+)?>:\s*/;
 
 enum MessageType {
