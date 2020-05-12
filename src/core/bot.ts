@@ -9,6 +9,7 @@ import {
     ChatUpdateArguments,
     PinsAddArguments,
     PinsRemoveArguments,
+    ReactionsRemoveArguments,
 } from '@slack/web-api';
 import { loginfo, logdebug, logerror } from './log';
 import User from 'core/model/user';
@@ -97,6 +98,10 @@ class Bot {
 
     public _react(options: ReactionsAddArguments) {
         return this.web.reactions.add(options);
+    }
+
+    public _unreact(options: ReactionsRemoveArguments) {
+        return this.web.reactions.remove(options);
     }
 
     public _pin(options: PinsAddArguments) {
