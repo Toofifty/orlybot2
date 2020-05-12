@@ -199,6 +199,14 @@ export default class Message extends BaseModel {
         });
     }
 
+    public async removeReaction(reaction: string) {
+        await bot._unreact({
+            name: reaction,
+            channel: this.channel.id,
+            timestamp: this.ts,
+        });
+    }
+
     /**
      * Get a single-line representation of the whole message
      * for logging.

@@ -85,10 +85,13 @@ export default class CommandRunner {
      * Will also print out any uncaught errors to the user.
      */
     public async execute(): Promise<void> {
+        this.message.addReaction('waiting');
         try {
             return await this.command.run(this.message);
         } catch (e) {
             this.message.replySystemError(e);
+        } finally {
+            this.message.removeReaction('waiting');
         }
     }
 }

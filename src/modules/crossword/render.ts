@@ -2,7 +2,7 @@ import he from 'he';
 import { CrosswordData } from './types';
 
 export const render = (
-    { size, gridnums, grid }: CrosswordData,
+    { size, gridnums, grid, title, author }: CrosswordData,
     filled: string[] = []
 ) => {
     const box = (x: number, y: number) => {
@@ -10,6 +10,7 @@ export const render = (
             return false;
         return grid[y * size.cols + x] !== '.';
     };
+
     let result = '';
     for (let y = 0; y < size.rows + 1; y++) {
         let lineNumbers = '';
@@ -76,7 +77,18 @@ export const render = (
         }
         result += `${lineNumbers}\n${lineLetters}\n`;
     }
-    return result;
+
+    const width = size.cols * 4;
+    const centredTitle = `${Array(Math.floor((width - title.length + 1) / 2))
+        .fill(' ')
+        .join('')}${title}`;
+    const centredAuthor = `${Array(Math.floor((width - author.length - 7) / 2))
+        .fill(' ')
+        .join('')}Author: ${author}`;
+
+    const blurb = `${centredTitle}\n${centredAuthor}`;
+
+    return result + blurb;
 };
 
 const renderClues = (
