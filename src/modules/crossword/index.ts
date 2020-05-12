@@ -41,11 +41,9 @@ const printGame = async (
     },
     filled?: string[]
 ) => {
-    writeFileSync('crossword_latest.txt', JSON.stringify(crossword, null, 4));
-
     const game = await message.reply(pre(render(crossword, filled)));
 
-    await game.pin();
+    game.pin();
     const acrossClues = await game.replyInThread(
         renderAcross(
             crossword.clues.across,
@@ -62,8 +60,7 @@ const printGame = async (
     );
 
     game.children = [acrossClues, downClues];
-    await update(message.channel, store => ({
-        ...store,
+    await update(message.channel, () => ({
         gameMessage: game.serialize(),
     }));
 };
@@ -99,128 +96,136 @@ Command.create('crossword', async (message, [n, dir, word]) => {
         throw `Couldn't find a clue for ${n} ${direction}`;
     }
 
-    if (
-        crossword.answers[direction][answerIndex].toLowerCase() ===
-        word.toLowerCase()
-    ) {
-        // TODO: check if word is already in the grid
-        if (complete?.[direction].includes(answerIndex)) {
-            message.addReaction('eyes');
-            return;
-        }
-        // add to completed
-        await update(message.channel, store => {
-            const complete = store.complete ?? { across: [], down: [] };
-            const correct = store.contributors?.[message.user.id] ?? 0;
-            return {
-                complete: {
-                    ...complete,
-                    [direction]: [...complete[direction], answerIndex],
-                },
-                contributors: {
-                    ...(store.contributors ?? {}),
-                    [message.user.id]: correct + 1,
-                },
-            };
-        });
+    const answer = crossword.answers[direction][answerIndex];
 
-        // add to game
-        await update(message.channel, store => {
-            const { cols, rows } = store.crossword!.size;
-            const grid = store.grid ?? Array(cols * rows).fill(' ');
+    if (word.length > answer.length) {
+        throw 'Your word has too many letters';
+    }
 
-            const start = store.crossword!.gridnums.indexOf(Number(n));
-            if (direction === 'across') {
-                word.toUpperCase()
-                    .split('')
-                    .forEach((c, i) => {
-                        grid[start + i] = c;
-                    });
-            } else {
-                word.toUpperCase()
-                    .split('')
-                    .forEach((c, i) => {
-                        grid[start + i * cols] = c;
-                    });
-            }
+    if (word.length < answer.length) {
+        throw 'Your word doesn\'t have enough letters';
+    }
 
-            return { grid };
-        });
-
-        // update crossword
-        const {
-            grid,
-            gameMessage,
-            crossword,
-            contributors,
-            complete: completed,
-        } = await load(message.channel);
-        const game = await BotMessage.from(gameMessage);
-        game.edit(pre(render(crossword!, grid)));
-
-        const acrossComment = await BotMessage.from(game.children[0]);
-        acrossComment.edit(
-            renderAcross(
-                crossword!.clues.across,
-                crossword!.answers.across,
-                completed?.across ?? []
-            )
-        );
-
-        const downComment = await BotMessage.from(game.children[1]);
-        downComment.edit(
-            renderDown(
-                crossword!.clues.down,
-                crossword!.answers.down,
-                completed?.down ?? []
-            )
-        );
-
-        // add points
-        message.user.meta(
-            'crossword_correct',
-            (total?: number) => (total ?? 0) + 1
-        );
-
-        // check for finish
-        if (
-            crossword!.grid.join('').replace(/\./g, '').length <=
-            grid.join('').replace(/ /g, '').length
-        ) {
-            await message.reply('Game over! Well done to all who contributed!');
-            const contributions = Object.keys(contributors ?? {})
-                .map(ct => ({
-                    user: ct,
-                    score: contributors![ct],
-                }))
-                .sort((a, b) => (a.score < b.score ? 1 : 0));
-            await message.reply(
-                `${contributions.map(
-                    c => `${mention(c.user)} (*+${c.score}*)\n`
-                )}`
-            );
-
-            const game = await BotMessage.from(gameMessage);
-            game.unpin();
-            game.addReaction('white_check_mark');
-
-            update(message.channel, () => ({
-                crossword: undefined,
-                contributors: undefined,
-                complete: undefined,
-                grid: undefined,
-                gameMessage: undefined,
-            }));
-        }
-
-        message.addReaction('white_check_mark');
+    if (answer.toLowerCase() !== word.toLowerCase()) {
+        message.addReaction('x');
         return;
     }
 
-    message.addReaction('x');
-    // message.replyEphemeral(
-    //     crossword.answers[direction][answerIndex].toLowerCase()
-    // );
+    // TODO: check if word is already in the grid
+    if (complete?.[direction].includes(answerIndex)) {
+        message.addReaction('eyes');
+        return;
+    }
+
+    // check
+    message.addReaction('white_check_mark');
+
+    // add points
+    message.user.meta(
+        'crossword_correct',
+        (total?: number) => (total ?? 0) + 1
+    );
+
+    // add to game
+    await update(message.channel, store => {
+        // add to grid
+        const { cols, rows } = store.crossword!.size;
+        const grid = store.grid ?? Array(cols * rows).fill(' ');
+
+        const start = store.crossword!.gridnums.indexOf(Number(n));
+        if (direction === 'across') {
+            word.toUpperCase()
+                .split('')
+                .forEach((c, i) => {
+                    grid[start + i] = c;
+                });
+        } else {
+            word.toUpperCase()
+                .split('')
+                .forEach((c, i) => {
+                    grid[start + i * cols] = c;
+                });
+        }
+
+        // add to completed list
+        const complete = store.complete ?? { across: [], down: [] };
+        const correct = store.contributors?.[message.user.id] ?? 0;
+
+        return {
+            grid,
+            complete: {
+                ...complete,
+                [direction]: [...complete[direction], answerIndex],
+            },
+            contributors: {
+                ...(store.contributors ?? {}),
+                [message.user.id]: correct + 1,
+            },
+        };
+    });
+
+    // update crossword
+    const {
+        grid,
+        gameMessage,
+        crossword: updatedCrossword,
+        contributors,
+        complete: completed,
+    } = await load(message.channel);
+    const game = await BotMessage.from(gameMessage);
+    game.edit(pre(render(updatedCrossword!, grid)));
+
+    if (direction === 'across') {
+        const acrossComment = await BotMessage.from(game.children[0]);
+        acrossComment.edit(
+            renderAcross(
+                updatedCrossword!.clues.across,
+                updatedCrossword!.answers.across,
+                completed?.across ?? []
+            )
+        );
+    }
+
+    if (direction === 'down') {
+        const downComment = await BotMessage.from(game.children[1]);
+        downComment.edit(
+            renderDown(
+                updatedCrossword!.clues.down,
+                updatedCrossword!.answers.down,
+                completed?.down ?? []
+            )
+        );
+    }
+
+    // check for finish
+    if (
+        updatedCrossword!.grid.join('').replace(/\./g, '').length <=
+        grid.join('').replace(/ /g, '').length
+    ) {
+        await message.reply('Game over! Well done to all who contributed!');
+        const contributions = Object.keys(contributors ?? {})
+            .map(ct => ({
+                user: ct,
+                score: contributors![ct],
+            }))
+            .sort((a, b) => (a.score < b.score ? 1 : 0));
+        message.reply(
+            `${contributions
+                .map(c => `${mention(c.user)} (*+${c.score}*)`)
+                .join('\n')}`
+        );
+
+        game.unpin();
+        game.addReaction('white_check_mark');
+
+        update(message.channel, () => ({
+            crossword: undefined,
+            contributors: undefined,
+            complete: undefined,
+            grid: undefined,
+            gameMessage: undefined,
+        }));
+    }
 })
     .desc('Submit a word in the crossword game')
     .alias('cw')

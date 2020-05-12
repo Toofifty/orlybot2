@@ -4,6 +4,7 @@ import { ID } from 'core/model/types';
 import DbModel from 'core/model/db-model';
 import db from 'core/db';
 import Message, { SavedMessage } from './message';
+import { loginfo } from 'core/log';
 
 const USER_TAG_REGEX = /<@(\w{9})(?:\|\w+)?>*/;
 
@@ -58,6 +59,7 @@ export default class User extends DbModel {
 
         const dbUser = await db.get(`user:${id}`);
         if (refetch || !dbUser) {
+            loginfo('Fetching user data for', id);
             const user = await this.from(
                 camel(await bot._fetchUser({ user: id }))
             );

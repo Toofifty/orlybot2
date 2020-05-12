@@ -3,6 +3,7 @@ import { camel } from 'core/util';
 import { ID } from 'core/model/types';
 import DbModel from 'core/model/db-model';
 import db from 'core/db';
+import { loginfo } from 'core/log';
 
 /**
  * Model for a channel or Slack conversation (group messages or instant message).
@@ -32,6 +33,7 @@ export default class Channel extends DbModel {
     public static async find(id: ID, refetch?: boolean): Promise<Channel> {
         const dbChannel = await db.get(`channel:${id}`);
         if (refetch || !dbChannel) {
+            loginfo('Fetching channel data for', id);
             const channel = await this.from(
                 camel(await bot._fetchChannel({ channel: id }))
             );
