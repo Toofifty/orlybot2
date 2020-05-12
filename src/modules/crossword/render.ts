@@ -45,9 +45,17 @@ export const render = (
                         c = '┘';
                     }
                 }
-                const f = x === size.cols || y === size.rows ? ' ' : '█';
-                lineNumbers += `${c}${top}`;
-                lineLetters += `${l} ${f} `;
+                const f = y === size.rows ? ' ' : '█';
+
+                if (x === size.cols) {
+                    lineNumbers += `${c}`;
+                    lineLetters += `${l}`;
+                } else if (y === size.rows) {
+                    lineNumbers += `${c}${top}`;
+                } else {
+                    lineNumbers += `${c}${top}`;
+                    lineLetters += `${l} ${f} `;
+                }
             } else {
                 // just letter - will always have one before it
                 // check if x-0,1 y-1 is blank
