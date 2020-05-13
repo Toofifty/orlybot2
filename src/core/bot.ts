@@ -72,7 +72,6 @@ class Bot {
             if (!data) return;
             const message = await Message.from(data);
             if (!message.isUserMessage) return;
-            this.rtm.sendTyping(message.channel.id);
             loginfo(message.toString());
 
             CommandRunner.handle(message);
@@ -155,7 +154,7 @@ class Bot {
         event: T['type'],
         callback: (data: T) => void
     ) {
-        const camelCallback = (data: any) => camel(data);
+        const camelCallback = (data: any) => callback(camel(data));
         this.eventCallbacks.set(callback, camelCallback);
         this.rtm.once(event, camelCallback);
     }
