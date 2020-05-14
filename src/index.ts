@@ -6,6 +6,7 @@ import 'modules/articulate';
 import 'modules/cleverbot';
 import 'modules/countdown';
 import 'modules/crossword';
+import 'modules/inspirobot';
 import 'modules/jokes';
 import 'modules/lunch';
 import 'modules/meta';
