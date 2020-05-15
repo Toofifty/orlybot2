@@ -36,7 +36,7 @@ class Bot {
         this.registerMessageListener();
         this.rtm.start().then(({ self }: any) => {
             loginfo('Connected.');
-            this.checkIn();
+            // this.checkIn();
             this.id = self.id;
             this.name = self.name;
             this.readyCallbacks.forEach(cb => cb(this));

@@ -1,5 +1,8 @@
 const createLogger = (level: string) => (...message: any[]) =>
-    (console[level] ?? console.log)(`[bot:${level}]`, ...message);
+    (console[level] ?? console.log)(
+        `[${new Date().toISOString()}][bot:${level}]`,
+        ...message
+    );
 
 export const log = createLogger('info');
 export const loginfo = log;
