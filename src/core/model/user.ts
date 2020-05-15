@@ -29,11 +29,6 @@ export default class User extends DbModel {
      */
     public isAdmin: boolean;
 
-    /**
-     * Complete message history for the user.
-     */
-    public messages?: SavedMessage[];
-
     private _meta: Record<string, any> = {};
 
     public static from(data: any) {
@@ -99,7 +94,6 @@ export default class User extends DbModel {
             profile: {
                 displayName: this.profile.displayName,
             },
-            messages: this.messages,
             meta: this._meta,
         };
     }
@@ -162,15 +156,6 @@ export default class User extends DbModel {
             as_user: true,
             text,
         });
-    }
-
-    /**
-     * Log a message on the user.
-     */
-    public said(message: Message) {
-        if (!this.messages) this.messages = [];
-        this.messages.push(message.serialize());
-        this.save();
     }
 
     public toString() {

@@ -119,9 +119,6 @@ export default class Message extends BaseModel {
             this.text = this.text.replace(match, '');
         }
 
-        // log this message in the user model
-        this.user.said(this);
-
         return this;
     }
 
