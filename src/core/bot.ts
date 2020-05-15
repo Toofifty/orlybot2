@@ -30,25 +30,25 @@ class Bot {
     private eventCallbacks: WeakMap<Function, Function> = new WeakMap();
 
     public constructor() {
+        loginfo('Connecting to Slack...');
         this.web = new WebClient(process.env.SLACK_TOKEN!);
         this.rtm = new RTMClient(process.env.SLACK_TOKEN!);
-        // this.checkIn();
         this.registerMessageListener();
         this.rtm.start().then(({ self }: any) => {
+            loginfo('Connected.');
+            this.checkIn();
             this.id = self.id;
             this.name = self.name;
             this.readyCallbacks.forEach(cb => cb(this));
             this.readyCallbacks = [];
         });
-        loginfo('Connected to Slack');
     }
 
-    public ready(cb: (bot: Bot) => void) {
+    public ready(cb: (bot: Bot) => void): void {
         if (this.id) {
-            cb(this);
-        } else {
-            this.readyCallbacks.push(cb);
+            return cb(this);
         }
+        this.readyCallbacks.push(cb);
     }
 
     /**
@@ -83,6 +83,8 @@ class Bot {
      *
      * Will attempt to use RTM if only text and channel are specified,
      * otherwise (and on error) it will fall back to the web client.
+     *
+     * Rate limiting special (1 per second per channel)
      */
     public async _message(options: ChatPostMessageArguments) {
         try {
@@ -95,28 +97,45 @@ class Bot {
         return await this.web.chat.postMessage(options);
     }
 
+    /**
+     * Rate limiting Tier 3 (50+ per minute)
+     */
     public _react(options: ReactionsAddArguments) {
         return this.web.reactions.add(options);
     }
 
+    /**
+     * Rate limiting Tier 2 (20+ per minute)
+     */
     public _unreact(options: ReactionsRemoveArguments) {
         return this.web.reactions.remove(options);
     }
 
+    /**
+     * Rate limiting Tier 2 (20+ per minute)
+     */
     public _pin(options: PinsAddArguments) {
         return this.web.pins.add(options);
     }
 
+    /**
+     * Rate limiting Tier 2 (20+ per minute)
+     */
     public _unpin(options: PinsRemoveArguments) {
         return this.web.pins.remove(options);
     }
 
+    /**
+     * Rate limiting Tier 3 (50+ per minute)
+     */
     public _update(options: ChatUpdateArguments) {
         return this.web.chat.update(options);
     }
 
     /**
      * Send an ephemeral message to a user.
+     *
+     * Rate limiting Tier 4 (100+ per minute)
      */
     public _ephemeral(options: ChatPostEphemeralArguments) {
         return this.web.chat.postEphemeral(options);
@@ -124,6 +143,8 @@ class Bot {
 
     /**
      * Fetch a user's information from Slack.
+     *
+     * Rate limiting Tier 4 (100+ per minute)
      */
     public async _fetchUser(options: UsersInfoArguments) {
         try {
@@ -136,6 +157,8 @@ class Bot {
 
     /**
      * Fetch channel information from Slack.
+     *
+     * Rate limiting Tier 3 (50+ per minute)
      */
     public async _fetchChannel(options: ConversationsInfoArguments) {
         return ((await this.web.conversations.info(options)) as any).channel;
