@@ -288,4 +288,16 @@ Command.create('crossword', async (message, [n, dir, word]) => {
                 0
             )}% complete.`;
         }).desc('Get completion status of the latest crossword')
+    )
+    .nest(
+        Command.sub('cancel', async message => {
+            await update(message.channel, () => ({
+                crossword: undefined,
+                contributors: undefined,
+                complete: undefined,
+                grid: undefined,
+                gameMessage: undefined,
+            }));
+            return 'Crossword cancelled :(';
+        }).desc('Cancel the current crossword puzzle')
     );
