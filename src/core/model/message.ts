@@ -1,3 +1,4 @@
+import { MessageAttachment } from '@slack/web-api';
 import BaseModel from 'core/model/base-model';
 import User from 'core/model/user';
 import Channel from 'core/model/channel';
@@ -147,9 +148,11 @@ export default class Message extends BaseModel {
      * Reply directly to the message - in whatever context
      * the message was originally in (IM or channel).
      */
-    public async reply(text: string) {
-        if (this.channel.isIm) return this.replyPrivately(text);
-        return (await BotMessage.from(await this.channel.message(text))).set({
+    public async reply(text: string, attachments?: MessageAttachment[]) {
+        if (this.channel.isIm) return this.replyPrivately(text, attachments);
+        return (
+            await BotMessage.from(await this.channel.message(text, attachments))
+        ).set({
             parent: this,
         });
     }
@@ -168,8 +171,13 @@ export default class Message extends BaseModel {
     /**
      * Reply to the message in an IM.
      */
-    public async replyPrivately(text: string) {
-        return (await BotMessage.from(await this.user.message(text))).set({
+    public async replyPrivately(
+        text: string,
+        attachments?: MessageAttachment[]
+    ) {
+        return (
+            await BotMessage.from(await this.user.message(text, attachments))
+        ).set({
             parent: this,
         });
     }

@@ -1,9 +1,9 @@
+import { MessageAttachment } from '@slack/web-api';
 import bot from 'core/bot';
 import { camel } from 'core/util';
 import { ID } from 'core/model/types';
 import DbModel from 'core/model/db-model';
 import db from 'core/db';
-import Message, { SavedMessage } from './message';
 import { loginfo } from 'core/log';
 
 const USER_TAG_REGEX = /<@(\w{9})(?:\|\w+)?>*/;
@@ -138,11 +138,12 @@ export default class User extends DbModel {
     /**
      * Send a direct message to the user.
      */
-    public message(text: string) {
+    public message(text: string, attachments?: MessageAttachment[]) {
         return bot._message({
             channel: this.id,
             as_user: true,
             text,
+            attachments,
         });
     }
 

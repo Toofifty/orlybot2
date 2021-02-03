@@ -13,4 +13,5 @@ import 'modules/lunch';
 import 'modules/meta';
 import 'modules/misc';
 import 'modules/simpsons';
+import 'modules/stonks';
 import 'modules/trivia';

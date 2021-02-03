@@ -1,3 +1,4 @@
+import { MessageAttachment } from '@slack/web-api';
 import bot from 'core/bot';
 import { camel } from 'core/util';
 import { ID } from 'core/model/types';
@@ -66,11 +67,12 @@ export default class Channel extends DbModel {
     /**
      * Send a regular message to the channel.
      */
-    public message(text: string) {
+    public message(text: string, attachments?: MessageAttachment[]) {
         return bot._message({
             channel: this.id,
             as_user: true,
             text,
+            attachments,
         });
     }
 
