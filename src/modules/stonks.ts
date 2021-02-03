@@ -57,61 +57,54 @@ Command.create('stonks', async (message, [symbol, region = 'US']) => {
 
     message.replyEphemeral(`Looking up symbol ${symbol}, one moment...`);
 
-    try {
-        const { price } = await fetchSummary(symbol, region);
+    const { price } = await fetchSummary(symbol, region);
 
-        message.reply('', [
-            {
-                title: `${price.shortName} (${price.symbol})`,
-                pretext: `This is what I found from ${price.exchange}`,
-                title_link: `https://finance.yahoo.com/quote/${symbol}/`,
-                thumb_url:
-                    'https://s.yimg.com/cv/apiv2/social/images/yahoo_default_logo.png',
-                text: `Volume: ${price.regularMarketVolume.fmt}`,
-                fields: [
-                    {
-                        title: `Market (${fmtDate(price.regularMarketTime)})`,
-                        value: `${fmt(price.regularMarketPrice, price)} *${
-                            price.regularMarketChange.fmt
-                        } (${price.regularMarketChangePercent.fmt})*`,
-                        short: true,
-                    },
-                    {
-                        title: `Post market (${fmtDate(price.postMarketTime)})`,
-                        value: `${fmt(price.postMarketPrice, price)} *${
-                            price.postMarketChange.fmt
-                        } (${price.postMarketChangePercent.fmt})*`,
-                        short: true,
-                    },
-                    {
-                        title: 'Open',
-                        value: `${fmt(price.regularMarketOpen, price)}`,
-                        short: true,
-                    },
-                    {
-                        title: 'Previous close',
-                        value: `${fmt(
-                            price.regularMarketPreviousClose,
-                            price
-                        )}`,
-                        short: true,
-                    },
-                    {
-                        title: 'High (day)',
-                        value: `${fmt(price.regularMarketDayHigh, price)}`,
-                        short: true,
-                    },
-                    {
-                        title: 'Low (day)',
-                        value: `${fmt(price.regularMarketDayLow, price)}`,
-                        short: true,
-                    },
-                ],
-            },
-        ]);
-    } catch {
-        throw new Error("I couldn't load prices - I might be rate-limited :(");
-    }
+    message.reply('', [
+        {
+            title: `${price.shortName} (${price.symbol})`,
+            pretext: `This is what I found from ${price.exchange}`,
+            title_link: `https://finance.yahoo.com/quote/${symbol}/`,
+            thumb_url:
+                'https://s.yimg.com/cv/apiv2/social/images/yahoo_default_logo.png',
+            text: `Volume: ${price.regularMarketVolume.fmt}`,
+            fields: [
+                {
+                    title: `Market (${fmtDate(price.regularMarketTime)})`,
+                    value: `${fmt(price.regularMarketPrice, price)} *${
+                        price.regularMarketChange.fmt
+                    } (${price.regularMarketChangePercent.fmt})*`,
+                    short: true,
+                },
+                {
+                    title: `Post market (${fmtDate(price.postMarketTime)})`,
+                    value: `${fmt(price.postMarketPrice, price)} *${
+                        price.postMarketChange.fmt
+                    } (${price.postMarketChangePercent.fmt})*`,
+                    short: true,
+                },
+                {
+                    title: 'Open',
+                    value: `${fmt(price.regularMarketOpen, price)}`,
+                    short: true,
+                },
+                {
+                    title: 'Previous close',
+                    value: `${fmt(price.regularMarketPreviousClose, price)}`,
+                    short: true,
+                },
+                {
+                    title: 'High (day)',
+                    value: `${fmt(price.regularMarketDayHigh, price)}`,
+                    short: true,
+                },
+                {
+                    title: 'Low (day)',
+                    value: `${fmt(price.regularMarketDayLow, price)}`,
+                    short: true,
+                },
+            ],
+        },
+    ]);
 })
     .desc('Check stonk prices')
     .arg({ name: 'symbol', required: true })
