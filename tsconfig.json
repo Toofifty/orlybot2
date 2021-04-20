@@ -21,6 +21,6 @@
             "modules": ["./modules"]
         }
     },
-    "include": ["src"],
+    "include": ["src", "node_modules/reflect-metadata"],
     "exclude": ["node_modules"]
 }

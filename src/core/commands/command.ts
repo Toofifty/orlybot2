@@ -321,4 +321,8 @@ export default class Command {
             ...flat(Object.values(this.subcommands).map(sub => sub.help)),
         ];
     }
+
+    public get isV2() {
+        return false;
+    }
 }

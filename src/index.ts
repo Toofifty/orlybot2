@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import 'dotenv/config';
 
 import 'core/bot';
@@ -14,4 +15,4 @@ import 'modules/meta';
 import 'modules/misc';
 import 'modules/simpsons';
 import 'modules/stonks';
-import 'modules/trivia';
+import 'modules/new_trivia';
