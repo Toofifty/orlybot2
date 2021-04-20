@@ -1,9 +1,12 @@
 import { Command, registry } from 'core/commands';
 import { CommandArgument } from 'core/commands/types';
+import db from 'core/db';
 import Channel from 'core/model/channel';
 import Message from 'core/model/message';
 import User from 'core/model/user';
+import { StoreModel, StoreModelProperties } from './store-model';
 import { Meta } from './meta';
+import { DbStore } from './db-store';
 
 const numMapToArray = <T>(map: Record<number, T>) =>
     map
@@ -12,10 +15,12 @@ const numMapToArray = <T>(map: Record<number, T>) =>
               .map(([, v]) => v)
         : [];
 
-export default class CommandController {
-    protected message: Message;
-    protected user: User;
-    protected channel: Channel;
+export default class CommandController<TStore = any> {
+    public message: Message;
+    public user: User;
+    public channel: Channel;
+    public parent?: CommandController<TStore>;
+    protected _store: DbStore<TStore> & StoreModelProperties<TStore>;
 
     private m<T = string>(key: any): T {
         return Reflect.getMetadata(key, this);
@@ -41,24 +46,20 @@ export default class CommandController {
                 }
             });
 
-            // custom arguments
-            const promises = argMeta.map(
-                async ({ name, validators }, index) => {
-                    if (!validators) return;
-                    const validationPromises = validators?.map(
-                        async validator => {
-                            const res = await validator(args[index], index, {
-                                controller: this,
-                                args,
-                            });
-                            if (res !== true) {
-                                throw new Error(res);
-                            }
-                        }
-                    );
-                    await Promise.all(validationPromises);
-                }
-            );
+            // validate arguments
+            const promises = argMeta.map(async ({ validators }, index) => {
+                if (!validators || !args[index]) return;
+                const validationPromises = validators?.map(async validator => {
+                    const res = await validator(args[index], index, {
+                        controller: this,
+                        args,
+                    });
+                    if (res !== true) {
+                        throw new Error(res);
+                    }
+                });
+                await Promise.all(validationPromises);
+            });
             await Promise.all(promises);
 
             // validate command
@@ -80,9 +81,7 @@ export default class CommandController {
         const mainArgs = numMapToArray(
             this.m<CommandArgument[]>(`${main}/${Meta.ARGS}`)
         );
-        mainArgs.forEach(arg => {
-            cmd.arg(arg);
-        });
+        mainArgs.forEach(arg => cmd.arg(arg));
 
         subcommands.forEach(sub => {
             const m = <T = string>(key: any): T => this.m(`${sub}/${key}`);
@@ -91,11 +90,15 @@ export default class CommandController {
                 cmd.nest(new delegated()._convert());
                 return;
             }
-            cmd.nest(
-                Command.sub(sub, this._exec(sub))
-                    .alias(...(m(Meta.ALIASES) ?? []))
-                    .desc(m(Meta.DESCRIPTION) ?? 'No description provided.')
-            );
+
+            const subcmd = Command.sub(sub, this._exec(sub))
+                .alias(...(m(Meta.ALIASES) ?? []))
+                .desc(m(Meta.DESCRIPTION) ?? 'No description provided.');
+
+            const args = numMapToArray(m<CommandArgument[]>(Meta.ARGS));
+            args.forEach(arg => subcmd.arg(arg));
+
+            cmd.nest(subcmd);
         });
 
         return cmd;
@@ -109,4 +112,15 @@ export default class CommandController {
     public async after(): Promise<void> {}
 
     public async main(): Promise<void> {}
+
+    protected async setStore(
+        store: DbStore<TStore> & StoreModelProperties<TStore>
+    ) {
+        await store.load();
+        this._store = store;
+    }
+
+    public get store() {
+        return this.parent?._store ?? this._store;
+    }
 }

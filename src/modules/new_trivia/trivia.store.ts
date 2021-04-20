@@ -1,9 +1,19 @@
-// import { Store } from './core';
+import { CommandController, DbStore } from 'core/new';
 
-// interface ITriviaStore {}
+export interface ITriviaStore {
+    noreply: boolean;
+    autostart: boolean;
+    categories: string[];
+}
 
-// export default class TriviaStore extends Store<ITriviaStore> {
-//     constructor(ctx: any) {
-//         super(`trivia:${ctx.channel}`);
-//     }
-// }
+export default class TriviaStore extends DbStore<ITriviaStore> {
+    protected initial = {
+        noreply: true,
+        autostart: false,
+        categories: [],
+    };
+
+    public static make(controller: CommandController) {
+        return new this(`trivia:${controller.channel.id}`) as any;
+    }
+}

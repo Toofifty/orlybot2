@@ -6,7 +6,7 @@ import DbModel from 'core/model/db-model';
 import db from 'core/db';
 import { loginfo } from 'core/log';
 
-const USER_TAG_REGEX = /<@(\w{9})(?:\|\w+)?>*/;
+export const USER_TAG_REGEX = /<@(\w{9})(?:\|\w+)?>*/;
 
 export default class User extends DbModel {
     public id: ID;

@@ -70,7 +70,7 @@ export const validate = (...validators: Validator[]) => {
                 Reflect.getMetadata(`${cmd.toString()}/${Meta.ARGS}`, target) ??
                 {};
             if (!args[index]) {
-                args[index] = { name: 'unknown', required: true };
+                args[index] = { name: 'unknown', required: false };
             }
             args[index].validators = validators;
             Reflect.defineMetadata(
@@ -97,6 +97,18 @@ export const arg = (name: string): ParameterDecorator => {
             args[index] = { name, required: false };
         }
         args[index].name = name;
+        Reflect.defineMetadata(`${cmd.toString()}/${Meta.ARGS}`, args, target);
+    };
+};
+
+export const def = (value: string): ParameterDecorator => {
+    return (target, cmd, index) => {
+        const args: Record<number, CommandArgument> =
+            Reflect.getMetadata(`${cmd.toString()}/${Meta.ARGS}`, target) ?? {};
+        if (!args[index]) {
+            args[index] = { name: 'unknown', required: false };
+        }
+        args[index].def = value;
         Reflect.defineMetadata(`${cmd.toString()}/${Meta.ARGS}`, args, target);
     };
 };
