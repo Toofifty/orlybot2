@@ -1,4 +1,7 @@
+import Channel from 'core/model/channel';
 import Message from 'core/model/message';
+import User from 'core/model/user';
+import Container from 'core/oop/di/container';
 import Command from './command';
 import registry from './registry';
 
@@ -85,6 +88,10 @@ export default class CommandRunner {
      * Will also print out any uncaught errors to the user.
      */
     public async execute(): Promise<void> {
+        Container.singleton(Message, this.message);
+        Container.singleton(Channel, this.message.channel);
+        Container.singleton(User, this.message.user);
+
         try {
             return await this.command.run(this.message);
         } catch (e) {
