@@ -124,12 +124,12 @@ const allCategories = async () => {
 
 export const load = async (channel: Channel): Promise<TriviaStore> => {
     const data = await db.get<TriviaStore>(`trivia:${channel.id}`);
-    if (!data) {
+    if (!data || !data.enabledCategories) {
         update(channel, store => ({
+            ...store,
             enabledCategories: [],
             noReply: false,
             autostart: false,
-            ...store,
         }));
         return load(channel);
     }
