@@ -1,33 +1,37 @@
 import fetch from 'node-fetch';
 import { Command } from 'core/commands';
+import { pre } from 'core/util';
 
 const OPENAI_COMPLETIONS =
     'https://api.openai.com/v1/engines/davinci/completions';
 
-const parameters = {
-    temperature: 0.9,
-    max_tokens: 150,
-    top_p: 1,
-    frequency_penalty: 0.0,
-    presence_penalty: 0.6,
+const PROMPT_LENGTH = 6;
+
+type CompletionResponse = {
+    choices: { text: string }[];
 };
 
-const discussion = [
-    'The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n',
-    'Human: Hello, who are you?',
-    'AI: I am an AI created by OpenAI. How can I be of service?',
-    'Human: What year did The Simpsons start?',
-    'AI: The Simpsons first aired on December 17, 1989.',
-    'Human: Thanks!',
-    'AI: No worries mate!',
+const parameters = {
+    temperature: 0.9,
+    max_tokens: 50,
+    top_p: 1,
+    frequency_penalty: 0.9,
+    presence_penalty: 0.8,
+};
+
+const discussion: string[] = [
+    "Human: G'day, how's it goin'?",
+    'AI: Not too bad mate.',
 ];
 
-const getPrompt = () => discussion.join('\n');
+const getPrompt = () =>
+    discussion.slice(discussion.length - PROMPT_LENGTH).join('\n');
 const addToDiscussion = (human: string, ai: string) =>
-    discussion.push(`Human: ${human}`, `AI: ${ai}`);
+    discussion.push(`Human: ${human}`, `AI:${ai}`);
 
-const fetchCompletion = async (prompt: string, stop?: string[]) => {
-    const res = await fetch(OPENAI_COMPLETIONS, {
+const fetchCompletion = async (prompt: string, stop: string[] = ['\n']) => {
+    const res: CompletionResponse = await fetch(OPENAI_COMPLETIONS, {
+        method: 'post',
         headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
@@ -37,29 +41,41 @@ const fetchCompletion = async (prompt: string, stop?: string[]) => {
             prompt,
             stop,
         }),
-    });
+    }).then(res => res.json());
 
-    console.log(res);
-
-    return '???';
+    return res.choices[0].text;
 };
 
 const fetchReply = async (message: string) => {
-    const stop = ['\n', ' Human:', ' AI:'];
-    const res = await fetchCompletion(`${getPrompt()}\n${message}\nAI:`, stop);
-
-    console.log(res);
-
-    return '???';
+    const stop = ['\n', 'Human:', 'AI:'];
+    const completion = await fetchCompletion(
+        `${getPrompt()}\n${message}\nAI:`,
+        stop
+    );
+    addToDiscussion(message, completion);
+    return completion;
 };
 
 if (process.env.OPENAI_API_KEY) {
+    const viewLog = Command.sub('log')
+        .desc('View discussion log.')
+        .do(async message => {
+            message.reply(pre(discussion.join('\n')));
+        });
+
+    const viewPrompt = Command.sub('prompt')
+        .desc('View most recent discussion prompt.')
+        .do(async message => {
+            message.reply(pre(getPrompt()));
+        });
+
     const completePrompt = Command.sub('complete')
         .arg({ name: '...prompt', required: true })
         .desc('Get GPT-3 to complete a prompt.')
         .do(async (message, args) => {
-            const completion = await fetchCompletion(args.join(' '));
-            message.reply(completion);
+            const prompt = args.join(' ');
+            const completion = await fetchCompletion(prompt);
+            message.reply(`${prompt}${completion}`);
         });
 
     const setParam = Command.sub('set')
@@ -94,9 +110,13 @@ if (process.env.OPENAI_API_KEY) {
         .arg({ name: '...message', required: true })
         .desc('Talk to GPT-3!')
         .do(async (message, args) => {
+            await message.addReaction('thinking_face');
             const reply = await fetchReply(args.join(' '));
-            message.reply(reply);
+            await message.reply(reply);
+            message.removeReaction('thinking_face');
         })
         .nest(completePrompt)
-        .nest(setParam);
+        .nest(viewPrompt)
+        .nest(setParam)
+        .nest(viewLog);
 }
