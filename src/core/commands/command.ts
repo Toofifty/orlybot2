@@ -294,7 +294,9 @@ export default class Command {
         if (this.hidden) return [];
         return [
             [
-                this.commandName,
+                this.parent
+                    ? this.commandName.replace(this.parent.commandName, '\t')
+                    : this.commandName,
                 ...this.arguments.map(arghelp),
                 '-',
                 this.description,

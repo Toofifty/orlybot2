@@ -17,19 +17,24 @@ const parameters = {
     top_p: 1,
     frequency_penalty: 0.9,
     presence_penalty: 0.8,
+    stop: ['\n', 'Human:', 'AI:'],
 };
 
-const discussion: string[] = [
+let discussion: string[] = [
     "Human: G'day, how's it goin'?",
     'AI: Not too bad mate.',
 ];
 
 const getPrompt = () =>
     discussion.slice(discussion.length - PROMPT_LENGTH).join('\n');
+
 const addToDiscussion = (human: string, ai: string) =>
     discussion.push(`Human: ${human}`, `AI:${ai}`);
 
-const fetchCompletion = async (prompt: string, stop: string[] = ['\n']) => {
+const listify = (list: string[]) =>
+    `["${list.join('", "').replace('\n', '\\n')}"]`;
+
+const fetchCompletion = async (prompt: string) => {
     const res: CompletionResponse = await fetch(OPENAI_COMPLETIONS, {
         method: 'post',
         headers: {
@@ -39,7 +44,6 @@ const fetchCompletion = async (prompt: string, stop: string[] = ['\n']) => {
         body: JSON.stringify({
             ...parameters,
             prompt,
-            stop,
         }),
     }).then(res => res.json());
 
@@ -47,31 +51,57 @@ const fetchCompletion = async (prompt: string, stop: string[] = ['\n']) => {
 };
 
 const fetchReply = async (message: string) => {
-    const stop = ['\n', 'Human:', 'AI:'];
-    const completion = await fetchCompletion(
-        `${getPrompt()}\n${message}\nAI:`,
-        stop
-    );
+    const completion = await fetchCompletion(`${getPrompt()}\n${message}\nAI:`);
     addToDiscussion(message, completion);
     return completion;
 };
 
 if (process.env.OPENAI_API_KEY) {
     const viewLog = Command.sub('log')
-        .desc('View discussion log.')
+        .desc('View discussion log')
         .do(async message => {
             message.reply(pre(discussion.join('\n')));
         });
 
     const viewPrompt = Command.sub('prompt')
-        .desc('View most recent discussion prompt.')
+        .desc('View most recent discussion prompt')
         .do(async message => {
+            message.reply(pre(getPrompt()));
+        });
+
+    const viewParams = Command.sub('params')
+        .desc('View parameters used for GPT-3 requests')
+        .do(async message => {
+            message.reply(
+                pre(
+                    Object.entries(parameters)
+                        .map(
+                            ([k, v]) =>
+                                `${k}: ${Array.isArray(v) ? listify(v) : v}`
+                        )
+                        .join('\n')
+                )
+            );
+        });
+
+    const resetDiscussion = Command.sub('reset')
+        .desc('Reset discussion')
+        .do(async message => {
+            discussion = [];
+            message.addReaction('white_check_mark');
+        });
+
+    const addDiscussion = Command.sub('add')
+        .desc('Manually add to the discussion')
+        .do(async (message, args) => {
+            discussion.push(...args);
+            message.addReaction('white_check_mark');
             message.reply(pre(getPrompt()));
         });
 
     const completePrompt = Command.sub('complete')
         .arg({ name: '...prompt', required: true })
-        .desc('Get GPT-3 to complete a prompt.')
+        .desc('Get GPT-3 to complete a prompt')
         .do(async (message, args) => {
             const prompt = args.join(' ');
             const completion = await fetchCompletion(prompt);
@@ -80,11 +110,11 @@ if (process.env.OPENAI_API_KEY) {
 
     const setParam = Command.sub('set')
         .arg({ name: 'parameter', required: true })
-        .arg({ name: 'value', required: true })
+        .arg({ name: '...value', required: true })
         .desc('Set a parameter on GPT-3 requests')
-        .do(async (message, [param, valueStr]) => {
+        .do(async (message, [param, ...valueStr]) => {
             const keys = Object.keys(parameters);
-            if (!keys.includes('param')) {
+            if (!keys.includes(param)) {
                 throw new Error(
                     `Unknown parameter. Valid parameters are ${keys
                         .map(p => `\`${p}\``)
@@ -92,7 +122,19 @@ if (process.env.OPENAI_API_KEY) {
                 );
             }
 
-            const value = parseFloat(valueStr);
+            if (param === 'stop') {
+                const old = parameters.stop;
+                parameters.stop = valueStr;
+
+                message.reply(
+                    `Parameter \`${param}\` has been set to \`${listify(
+                        valueStr
+                    )}\` (was \`${listify(old)}\`).`
+                );
+                return;
+            }
+
+            const value = parseFloat(valueStr[0]);
             if (isNaN(value)) {
                 throw new Error('Parameter value must be numeric.');
             }
@@ -106,7 +148,7 @@ if (process.env.OPENAI_API_KEY) {
         });
 
     Command.create('gpt3')
-        .alias('g')
+        .alias('g', 'gpt')
         .arg({ name: '...message', required: true })
         .desc('Talk to GPT-3!')
         .do(async (message, args) => {
@@ -118,5 +160,8 @@ if (process.env.OPENAI_API_KEY) {
         .nest(completePrompt)
         .nest(viewPrompt)
         .nest(setParam)
-        .nest(viewLog);
+        .nest(viewParams)
+        .nest(viewLog)
+        .nest(resetDiscussion)
+        .nest(addDiscussion);
 }

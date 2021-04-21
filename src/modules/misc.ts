@@ -9,10 +9,16 @@ Command.create('say', (_, args) => args.join(' '))
 Command.create('help', (_, args) => {
     const search = args.join(' ');
     return pre(
-        flat(registry.all().map(command => command.help))
-            .filter(text => search.length === 0 || text.includes(search))
-            .sort((a, b) => (a > b ? 1 : -1))
-            .join('\n') || `Nothing found searching for "${search}"`
+        flat(
+            registry
+                .all()
+                .map(command => command.help)
+                .sort((a, b) => (a[0] > b[0] ? 1 : -1))
+                .filter(
+                    text =>
+                        search.length === 0 || text.join('').includes(search)
+                )
+        ).join('\n') || `Nothing found searching for "${search}"`
     );
 })
     .desc('Get some help')
@@ -22,10 +28,16 @@ Command.create('help', (_, args) => {
 Command.create('help-aliases', (_, args) => {
     const search = args.join(' ');
     return pre(
-        flat(registry.all().map(command => command.helpWithAliases))
-            .filter(text => search.length === 0 || text.includes(search))
-            .sort((a, b) => (a > b ? 1 : -1))
-            .join('\n') || `Nothing found searching for "${search}"`
+        flat(
+            registry
+                .all()
+                .map(command => command.helpWithAliases)
+                .sort((a, b) => (a[0] > b[0] ? 1 : -1))
+                .filter(
+                    text =>
+                        search.length === 0 || text.join('').includes(search)
+                )
+        ).join('\n') || `Nothing found searching for "${search}"`
     );
 })
     .desc('Get some help, and show command aliases')
