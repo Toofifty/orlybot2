@@ -21,6 +21,10 @@
             "modules": ["./modules"]
         }
     },
-    "include": ["src", "node_modules/reflect-metadata"],
+    "include": [
+        "src",
+        "node_modules/reflect-metadata",
+        "src/modules/**/*.controller.ts"
+    ],
     "exclude": ["node_modules"]
 }

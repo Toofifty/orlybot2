@@ -28,8 +28,7 @@
     "nodemon": "^2.0.2",
     "pouchdb-node": "^7.1.1",
     "reflect-metadata": "^0.1.13",
-    "tsconfig-paths": "^3.9.0",
-    "typedi": "^0.10.0"
+    "tsconfig-paths": "^3.9.0"
   },
   "devDependencies": {
     "@types/node": "^13.1.6",

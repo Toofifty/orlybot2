@@ -160,6 +160,17 @@ export default class Command {
     }
 
     /**
+     * Make the command admin-only.
+     */
+    public isAdmin(admin = true) {
+        return this.set({
+            permission: admin
+                ? CommandPermission.ADMIN
+                : CommandPermission.USER,
+        });
+    }
+
+    /**
      * Put the command in phrase mode.
      *
      * Phrase mode: whether the command must match the entire
@@ -203,6 +214,13 @@ export default class Command {
      */
     public hide(hidden: boolean = true) {
         return this.set({ hidden });
+    }
+
+    /**
+     * Hide the command from help text.
+     */
+    public isHidden(hidden: boolean = true) {
+        return this.hide(hidden);
     }
 
     /**

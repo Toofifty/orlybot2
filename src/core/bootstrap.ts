@@ -1,0 +1,3 @@
+/**
+ * Bootstraps the application
+ */

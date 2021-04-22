@@ -22,12 +22,13 @@ class ContainerClass {
     /**
      * Execute a method with the require dependencies
      */
-    public execute<T>(target: T, property: string & keyof T, ...args: any[]) {
+    public execute<T>(target: T, property: string, ...args: any[]) {
         const tokens =
             Reflect.getMetadata('design:paramtypes', target, property) ?? [];
         const injections = tokens.map(this.resolve.bind(this));
 
-        return Function.call(target, property, ...injections, ...args);
+        return target[property].bind(target)(...injections, ...args);
+        // return Function.call(target, property, ...injections, ...args);
     }
 }
 

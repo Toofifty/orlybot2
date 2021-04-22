@@ -1,19 +1,26 @@
-import { Controller, group, injectable, injectableMethod } from 'core/oop';
-import { Service } from 'typedi';
-
-@Service()
-class TestCls {
-    thing() {}
-}
+import { Controller, register } from 'core/oop';
+import { group, cmd, phrase } from 'core/oop/decorators';
+import Message from 'core/model/message';
+import { sleep, choose } from 'core/util';
+import { JokesService } from './jokes.service';
 
 @group('joke')
-@injectable
-@Service()
 export default class JokesController extends Controller {
-    constructor(test: TestCls) {
-        super();
+    @cmd('hmm', 'Tell me a joke')
+    public async joke(service: JokesService, message: Message) {
+        const { setup, punchline } = await service.fetchJoke();
+        message.reply(setup);
+        await sleep(5000);
+        message.reply(punchline);
     }
 
-    @injectableMethod
-    public testMethod(test: Controller) {}
+    @cmd('good bot', 'Thank me')
+    @phrase
+    public async goodBot(message: Message) {
+        message.reply(
+            choose(['Thanks :heart:', 'Cheers!', ':heart_eyes:', 'Thanks!'])
+        );
+    }
 }
+
+register(JokesController);

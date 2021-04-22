@@ -4,6 +4,7 @@ import User from 'core/model/user';
 import Container from 'core/oop/di/container';
 import Command from './command';
 import registry from './registry';
+import { logerror } from 'core/log';
 
 /**
  *
@@ -95,6 +96,7 @@ export default class CommandRunner {
         try {
             return await this.command.run(this.message);
         } catch (e) {
+            logerror(e);
             this.message.replySystemError(e);
         }
     }
