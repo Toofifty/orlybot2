@@ -30,6 +30,7 @@ class Bot {
     private eventCallbacks: WeakMap<Function, Function> = new WeakMap();
 
     public constructor() {
+        return;
         loginfo('Connecting to Slack...');
         this.web = new WebClient(process.env.SLACK_TOKEN!);
         this.rtm = new RTMClient(process.env.SLACK_TOKEN!);

@@ -1,7 +1,7 @@
 import { Controller, register } from 'core/oop';
-import { cmd, phrase } from 'core/oop/decorators';
+import { cmd } from 'core/oop/decorators';
 import Message from 'core/model/message';
-import { sleep, choose } from 'core/util';
+import { sleep } from 'core/util';
 import { JokesService } from './jokes.service';
 
 export default class JokesController extends Controller {
@@ -19,5 +19,3 @@ export default class JokesController extends Controller {
         message.reply(joke);
     }
 }
-
-register(JokesController);

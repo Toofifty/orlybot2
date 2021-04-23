@@ -1,6 +1,6 @@
 const keys = {
     COMMAND_GROUP: 'bot:command_group',
-    MAIN_COMMAND: 'bot:main_command',
+    MAIN_COMMAND_METHOD: 'bot:main_command_method',
     SUB_COMMANDS: 'bot:sub_commands',
     COMMAND_DESCRIPTION: 'bot:command_description',
     COMMAND_NAME: 'bot:command_name',

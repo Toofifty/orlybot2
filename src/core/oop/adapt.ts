@@ -14,7 +14,7 @@ export const adapt = <T extends Controller>(
     const meta = getMetaFactory(cls);
 
     const group = meta<string>(Meta.COMMAND_GROUP);
-    const main = meta<string>(Meta.MAIN_COMMAND);
+    const main = meta<string>(Meta.MAIN_COMMAND_METHOD);
 
     if (main && !group) {
         throw new Error(
@@ -41,13 +41,16 @@ export const adapt = <T extends Controller>(
 // const createCommand = (meta: MetaFactory, cls, sub) => {
 // Also, rename sub to method?
 
-const createCommand = (cls: Controller, sub: string, isGroup = false) => {
+const createCommand = (cls: Controller, method: string, isGroup = false) => {
     const cmeta = getMetaFactory(cls);
-    const meta = getMetaFactory(cls, sub);
+    if (isGroup) {
+        method = cmeta(Meta.MAIN_COMMAND_METHOD);
+    }
+    const meta = getMetaFactory(cls, method);
 
     return Command.sub(
         isGroup ? cmeta(Meta.COMMAND_GROUP) : meta(Meta.COMMAND_NAME),
-        createAction(cls, sub)
+        createAction(cls, method)
     )
         .desc(meta(Meta.COMMAND_DESCRIPTION))
         .alias(...(meta<string[]>(Meta.COMMAND_ALIASES) ?? []))
@@ -57,8 +60,8 @@ const createCommand = (cls: Controller, sub: string, isGroup = false) => {
         .isHidden(meta(Meta.COMMAND_IS_HIDDEN) ?? false);
 };
 
-const createAction = (cls: Controller, sub: string) => {
+const createAction = (cls: Controller, method: string) => {
     return async (_: any, args: string[]) => {
-        await Container.execute(cls, sub, args);
+        await Container.execute(cls, method, args);
     };
 };

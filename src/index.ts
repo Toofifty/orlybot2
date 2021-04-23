@@ -10,15 +10,17 @@ import 'modules/countdown';
 import 'modules/crossword';
 import 'modules/dungeon';
 import 'modules/inspirobot';
-import 'modules/jokes';
+import JokesController from 'modules/jokes';
 import 'modules/lunch';
 import 'modules/meta';
 import 'modules/misc';
 import 'modules/simpsons';
 import 'modules/stonks';
-import 'modules/trivia';
-import { logdebug } from 'core/log';
-import { registry } from 'core/commands';
+import TriviaController from 'modules/trivia';
+import { logdebug, registry, register } from 'core';
+
+register(JokesController);
+register(TriviaController);
 
 setTimeout(() => {
     logdebug(

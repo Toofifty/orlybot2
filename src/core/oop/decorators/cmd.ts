@@ -19,7 +19,7 @@ export const group = (name: string): ClassDecorator => {
  */
 export const maincmd = (description: string): MethodDecorator => {
     return (target, property) => {
-        Meta.set(Meta.MAIN_COMMAND, property, target);
+        Meta.set(Meta.MAIN_COMMAND_METHOD, property, target);
         Meta.set(
             Meta.prop(Meta.COMMAND_DESCRIPTION, property),
             description,
