@@ -1,7 +1,13 @@
 const keys = {
+    DESIGN_PARAMTYPES: 'design:paramtypes',
+
     COMMAND_GROUP: 'bot:command_group',
+    GROUP_BEFORE: 'bot:group_before',
+    GROUP_AFTER: 'bot:group_after',
+
     MAIN_COMMAND_METHOD: 'bot:main_command_method',
     SUB_COMMANDS: 'bot:sub_commands',
+
     COMMAND_DESCRIPTION: 'bot:command_description',
     COMMAND_NAME: 'bot:command_name',
     COMMAND_ALIASES: 'bot:command_aliases',
@@ -9,6 +15,10 @@ const keys = {
     COMMAND_IS_PARTIAL: 'bot:command_is_partial',
     COMMAND_IS_HIDDEN: 'bot:command_is_hidden',
     COMMAND_IS_ADMIN: 'bot:command_is_admin',
+    COMMAND_ARGS: 'bot:command_args',
+
+    COMMAND_VALIDATION: 'bot:command_validation',
+    COMMAND_ARGS_VALIDATION: 'bot:command_args_validation',
 } as const;
 
 export type MetaKey = typeof keys[keyof typeof keys];
@@ -23,8 +33,14 @@ export const Meta = {
     set: (key: MetaKey | MetaKeyProp, value: any, target: Object) =>
         Reflect.defineMetadata(key, value, target),
 
-    get: (key: MetaKey | MetaKeyProp, target: Object) =>
-        Reflect.getMetadata(key, target),
+    get: <T>(
+        key: MetaKey | MetaKeyProp,
+        target: Object,
+        property?: string | symbol
+    ): T =>
+        property
+            ? Reflect.getMetadata(key, target, property)
+            : Reflect.getMetadata(key, target),
 
     push: <T>(key: MetaKey | MetaKeyProp, item: T | T[], target: Object) => {
         const prev: T[] = Reflect.getMetadata(key, target) ?? [];

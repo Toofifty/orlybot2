@@ -1,7 +1,8 @@
-import { Command } from 'core/commands';
+import { Command, CommandArgument, UserError } from 'core/commands';
 import Container, { Constructable } from './di/container';
 import { Controller } from './controller';
 import { Meta, MetaKey } from './meta';
+import { StoredValidator, Validator } from './types';
 
 const getMetaFactory = (target: Object, property?: string) => <T>(
     key: MetaKey
@@ -37,10 +38,6 @@ export const adapt = <T extends Controller>(
     return [cmd];
 };
 
-// Instead of isGroup:
-// const createCommand = (meta: MetaFactory, cls, sub) => {
-// Also, rename sub to method?
-
 const createCommand = (cls: Controller, method: string, isGroup = false) => {
     const cmeta = getMetaFactory(cls);
     if (isGroup) {
@@ -48,7 +45,7 @@ const createCommand = (cls: Controller, method: string, isGroup = false) => {
     }
     const meta = getMetaFactory(cls, method);
 
-    return Command.sub(
+    const cmd = Command.sub(
         isGroup ? cmeta(Meta.COMMAND_GROUP) : meta(Meta.COMMAND_NAME),
         createAction(cls, method)
     )
@@ -58,10 +55,50 @@ const createCommand = (cls: Controller, method: string, isGroup = false) => {
         .isPartial(meta(Meta.COMMAND_IS_PARTIAL) ?? false)
         .isAdmin(meta(Meta.COMMAND_IS_ADMIN) ?? false)
         .isHidden(meta(Meta.COMMAND_IS_HIDDEN) ?? false);
+
+    (meta<CommandArgument[]>(Meta.COMMAND_ARGS) ?? []).forEach(arg =>
+        cmd.arg(arg)
+    );
+
+    return cmd;
 };
 
 const createAction = (cls: Controller, method: string) => {
+    const cmeta = getMetaFactory(cls);
+    const meta = getMetaFactory(cls, method);
+
+    const beforeFn = cmeta<string>(Meta.GROUP_BEFORE);
+    const afterFn = cmeta<string>(Meta.GROUP_AFTER);
+
     return async (_: any, args: string[]) => {
+        await runArgValidators(cls, method, args);
+
+        if (beforeFn) await Container.execute(cls, beforeFn);
         await Container.execute(cls, method, args);
+        if (afterFn) await Container.execute(cls, afterFn);
     };
+};
+
+const runArgValidators = async (
+    cls: Controller,
+    method: string,
+    args: string[]
+) => {
+    const meta = getMetaFactory(cls, method);
+
+    const validators = (
+        meta<StoredValidator[]>(Meta.COMMAND_ARGS_VALIDATION) ?? []
+    )
+        .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
+        .map(({ index, target, property }) => ({
+            index: index!,
+            validator: Container.execute(target, property) as Validator,
+        }));
+
+    for (let { index, validator } of validators) {
+        const result = await validator(args[index], index, { args });
+        if (result !== true) {
+            throw new UserError(result);
+        }
+    }
 };

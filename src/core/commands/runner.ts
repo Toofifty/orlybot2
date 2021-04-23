@@ -2,9 +2,10 @@ import Channel from 'core/model/channel';
 import Message from 'core/model/message';
 import User from 'core/model/user';
 import Container from 'core/oop/di/container';
+import { logerror } from 'core/log';
+import UserError from './user-error';
 import Command from './command';
 import registry from './registry';
-import { logerror } from 'core/log';
 
 /**
  *
@@ -96,6 +97,10 @@ export default class CommandRunner {
         try {
             return await this.command.run(this.message);
         } catch (e) {
+            if (e instanceof UserError) {
+                this.message.replyError(e.message);
+                return;
+            }
             logerror(e);
             this.message.replySystemError(e);
         }

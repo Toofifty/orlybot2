@@ -1,13 +1,25 @@
-import { InjectableValidator } from '../types';
+import { Meta } from '../meta';
 
-export const validate = (...validators: InjectableValidator[]) => {
+export const validate = <T extends Object>(
+    validatorClass: T,
+    ...validators: Exclude<keyof T, 'prototype'>[]
+) => {
+    console.log(validators);
     return <T>(
         target: Object,
         property: string | symbol,
         index: TypedPropertyDescriptor<T> | number
     ) => {
-        console.log(target[property].toString());
         if (typeof index === 'number') {
+            Meta.push(
+                Meta.prop(Meta.COMMAND_ARGS_VALIDATION, property),
+                validators.map(v => ({
+                    property: v,
+                    target: validatorClass,
+                    index,
+                })),
+                target
+            );
         } else {
         }
     };

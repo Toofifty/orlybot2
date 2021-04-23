@@ -22,7 +22,7 @@ class ContainerClass {
     /**
      * Execute a method with the require dependencies
      */
-    public execute<T>(target: T, property: string, ...args: any[]) {
+    public execute<T>(target: T, property: string | symbol, ...args: any[]) {
         const tokens =
             Reflect.getMetadata('design:paramtypes', target, property) ?? [];
         const injections = tokens.map(this.resolve.bind(this));

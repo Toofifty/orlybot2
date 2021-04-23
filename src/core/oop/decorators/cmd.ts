@@ -1,15 +1,43 @@
 import { Meta } from '../meta';
 import { loginfo } from 'core/log';
+import { CommandArgument } from 'core/commands';
 
-/**
- * Create an "umbrella" command for all the subcommands within.
- * If you'd still like to run an action on this command, use a
- * method decorated with `@maincmd`.
- */
-export const group = (name: string): ClassDecorator => {
-    return target => {
-        Meta.set(Meta.COMMAND_GROUP, name, target.prototype);
-    };
+const getArguments = (func: any): CommandArgument[] =>
+    func
+        .toString()
+        .replace(/[/][/].*$/gm, '')
+        .replace(/\s+/g, '')
+        .replace(/[/][*][^/*]*[*][/]/g, '')
+        .split('){', 1)[0]
+        .replace(/^[^(]*[(]/, '')
+        .split(',')
+        .filter(Boolean)
+        .map(param => {
+            const [, name, def] =
+                param.match(/((?:\.\.\.)?\w+)(?:='(.*)')?/) ?? [];
+            return { name, def, required: !def };
+        });
+
+const setArguments = (target: Object, property: string | symbol) => {
+    const argStart = Meta.get<object[]>(
+        Meta.DESIGN_PARAMTYPES,
+        target,
+        property
+    )
+        .map(p => p.toString())
+        .findIndex(
+            p =>
+                p.startsWith('function String()') ||
+                p.startsWith('function Object()')
+        );
+
+    if (argStart > -1) {
+        Meta.push(
+            Meta.prop(Meta.COMMAND_ARGS, property),
+            getArguments(target[property]).slice(argStart),
+            target
+        );
+    }
 };
 
 /**
@@ -25,6 +53,8 @@ export const maincmd = (description: string): MethodDecorator => {
             description,
             target
         );
+
+        setArguments(target, property);
     };
 };
 
@@ -40,6 +70,8 @@ export const cmd = (name: string, description: string): MethodDecorator => {
             target
         );
         Meta.push(Meta.SUB_COMMANDS, property, target);
+
+        setArguments(target, property);
     };
 };
 

@@ -5,3 +5,9 @@ export type Validator = (
 ) => true | string | Promise<true | string>;
 
 export type InjectableValidator = (...args: any[]) => Validator;
+
+export type StoredValidator = {
+    index?: number;
+    target: Object;
+    property: string | symbol;
+};
