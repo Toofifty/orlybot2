@@ -55,6 +55,12 @@ Command.create('roll', (message, [sides = '6']) => {
     .arg({ name: 'sides', def: '6' })
     .desc('Roll a dice');
 
+Command.create('good bot', () =>
+    choose(['Thanks :heart:', 'Cheers!', ':heart_eyes:', 'Thanks!'])
+)
+    .desc('Thank me')
+    .isPhrase();
+
 Command.create('bad bot', () =>
     choose([
         "I'm doing the best I can :(",
