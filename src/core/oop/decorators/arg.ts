@@ -9,8 +9,9 @@ const getParameters = (func: string): string[] => {
         .filter(Boolean);
 };
 
-export const arg: ParameterDecorator = (target, property, index) => {
+export const args: ParameterDecorator = (target, property, index) => {
     const parameters = getParameters(target[property].toString());
-    const [, arg, def] = parameters[index].match(/(\w+)(?:='(.*)')?/) ?? [];
+    const [, arg, def] =
+        parameters[index].match(/((?:\.\.\.)?\w+)(?:='(.*)')?/) ?? [];
     console.log(parameters, arg, def);
 };

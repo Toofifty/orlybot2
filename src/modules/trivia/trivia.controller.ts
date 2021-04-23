@@ -1,5 +1,5 @@
 import { Controller } from 'core/oop';
-import { group, maincmd, cmd, validate, arg } from 'core/oop/decorators';
+import { group, maincmd, cmd, validate, args } from 'core/oop/decorators';
 import { Message } from 'core/model';
 import TriviaValidator from './trivia.validator';
 
@@ -8,9 +8,9 @@ export default class TriviaController extends Controller {
     @maincmd('Start a game of trivia!')
     async start(
         message: Message,
-        @arg
+        @args
         @validate(TriviaValidator.validDifficulty)
-        difficulty?: string
+        ...difficulty: string[]
     ) {}
 
     @cmd('cancel', 'Cancel broken trivia')
