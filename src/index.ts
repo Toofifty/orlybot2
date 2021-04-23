@@ -9,6 +9,7 @@ import 'modules/cleverbot';
 import 'modules/countdown';
 import 'modules/crossword';
 import 'modules/dungeon';
+import 'modules/gpt3';
 import 'modules/inspirobot';
 import JokesController from 'modules/jokes';
 import 'modules/lunch';
