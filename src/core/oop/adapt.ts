@@ -86,12 +86,14 @@ const runArgValidators = async (
 ) => {
     const meta = getMetaFactory(cls, method);
 
+    const argStart = meta<number>(Meta.COMMAND_ARGSTART) ?? 0;
+
     const validators = (
         meta<StoredValidator[]>(Meta.COMMAND_ARGS_VALIDATION) ?? []
     )
         .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
         .map(({ index, target, property }) => ({
-            index: index!,
+            index: index! - argStart,
             validator: Container.execute(target, property) as Validator,
         }));
 

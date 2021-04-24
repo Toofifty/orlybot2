@@ -16,6 +16,7 @@ const keys = {
     COMMAND_IS_HIDDEN: 'bot:command_is_hidden',
     COMMAND_IS_ADMIN: 'bot:command_is_admin',
     COMMAND_ARGS: 'bot:command_args',
+    COMMAND_ARGSTART: 'bot:command_argstart',
 
     COMMAND_VALIDATION: 'bot:command_validation',
     COMMAND_ARGS_VALIDATION: 'bot:command_args_validation',

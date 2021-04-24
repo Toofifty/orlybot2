@@ -32,6 +32,7 @@ const setArguments = (target: Object, property: string | symbol) => {
         );
 
     if (argStart > -1) {
+        Meta.set(Meta.prop(Meta.COMMAND_ARGSTART, property), argStart, target);
         Meta.push(
             Meta.prop(Meta.COMMAND_ARGS, property),
             getArguments(target[property]).slice(argStart),
