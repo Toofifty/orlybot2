@@ -1,4 +1,4 @@
-import { Store, Channel } from 'core';
+import { Store, Channel, injectable } from 'core';
 
 interface ITriviaStore {
     enabledCategories: number[];
@@ -15,6 +15,7 @@ interface ITriviaStore {
 
 interface TriviaStore extends ITriviaStore {}
 
+@injectable()
 class TriviaStore extends Store<ITriviaStore> {
     initial = {
         enabledCategories: [],

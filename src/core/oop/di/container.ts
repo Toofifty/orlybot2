@@ -8,27 +8,48 @@ class ContainerClass {
         return this;
     }
 
-    public resolve<T>(service: Constructable<T>) {
+    public async resolve<T>(service: Constructable<T>): Promise<T> {
         if (this.singletons.has(service)) {
             return this.singletons.get(service);
         }
 
         const tokens = Reflect.getMetadata('design:paramtypes', service) ?? [];
-        const injections = tokens.map(this.resolve.bind(this));
+        const injections = await Promise.all(
+            tokens.map(this.resolve.bind(this))
+        );
 
-        return new service(...injections);
+        const constructed = new service(...injections);
+
+        if ('init' in constructed) {
+            await (constructed as any).init();
+        }
+
+        return constructed;
     }
 
     /**
      * Execute a method with the require dependencies
      */
-    public execute<T>(target: T, property: string | symbol, ...args: any[]) {
+    public async execute<T>(
+        target: T,
+        property: string | symbol,
+        ...args: any[]
+    ) {
+        if ('prototype' in target) {
+            const obj = await this.resolve(target as any);
+            return this.execute(obj, property, ...args);
+        }
+
         const tokens =
             Reflect.getMetadata('design:paramtypes', target, property) ?? [];
-        const injections = tokens.map(this.resolve.bind(this));
+
+        console.log(tokens);
+
+        const injections = await Promise.all(
+            tokens.map(this.resolve.bind(this))
+        );
 
         return target[property].bind(target)(...injections, ...args);
-        // return Function.call(target, property, ...injections, ...args);
     }
 }
 

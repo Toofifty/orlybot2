@@ -1,7 +1,9 @@
 import { Meta } from '../meta';
 
+export type Constructable<T> = new (...args: any[]) => T;
+
 export const validate = <T extends Object>(
-    validatorClass: T,
+    validatorClass: Constructable<T>,
     ...validators: Exclude<keyof T, 'prototype'>[]
 ) => {
     console.log(validators);

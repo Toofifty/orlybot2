@@ -4,10 +4,10 @@ import { registry } from 'core/commands';
 import { adapt } from './adapt';
 import { loginfo } from 'core/log';
 
-export const register = <T extends Controller>(
+export const register = async <T extends Controller>(
     controller: Constructable<T>
 ) => {
-    adapt(controller).forEach(cmd => {
+    (await adapt(controller)).forEach(cmd => {
         registry.register(cmd);
         loginfo(cmd.helpWithAliases);
     });

@@ -8,10 +8,10 @@ const getMetaFactory = (target: Object, property?: string) => <T>(
     key: MetaKey
 ): T => Meta.get(property ? Meta.prop(key, property) : key, target);
 
-export const adapt = <T extends Controller>(
+export const adapt = async <T extends Controller>(
     controller: Constructable<T>
-): Command[] => {
-    const cls = Container.resolve(controller);
+): Promise<Command[]> => {
+    const cls = await Container.resolve(controller);
     const meta = getMetaFactory(cls);
 
     const group = meta<string>(Meta.COMMAND_GROUP);
@@ -88,14 +88,16 @@ const runArgValidators = async (
 
     const argStart = meta<number>(Meta.COMMAND_ARGSTART) ?? 0;
 
-    const validators = (
+    const validatorPromises = (
         meta<StoredValidator[]>(Meta.COMMAND_ARGS_VALIDATION) ?? []
     )
         .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
-        .map(({ index, target, property }) => ({
+        .map(async ({ index, target, property }) => ({
             index: index! - argStart,
-            validator: Container.execute(target, property) as Validator,
+            validator: (await Container.execute(target, property)) as Validator,
         }));
+
+    const validators = await Promise.all(validatorPromises);
 
     for (let { index, validator } of validators) {
         const result = await validator(args[index], index, { args });

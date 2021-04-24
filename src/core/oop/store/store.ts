@@ -10,16 +10,21 @@ export class Store<T> extends StoreModel<T> {
         super(key, []);
     }
 
+    async init() {
+        await this.load();
+    }
+
     /**
      * Attempt to load store data from disk.
      * If not data is found, this will be
      * populated with the `initial` data.
      */
     async load() {
-        const data = await db.get(this.key);
+        this.data = (await db.get<NoUndefined<T>>(this.key))!;
 
-        if (!data) {
+        if (!this.data) {
             this.data = this.initial;
+            this.createFields();
             await this.save();
         }
     }

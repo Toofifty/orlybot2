@@ -10,15 +10,13 @@ export class StoreModel<T> {
     ) {
         if (data) {
             this.data = data;
+            this.createFields();
         }
-        this.createFields();
     }
 
     createFields() {
         Object.keys(this.data).forEach(key => {
             Object.defineProperty(this, key, {
-                configurable: true,
-
                 get: () => this.data[key],
                 set: value => (this.data[key] = value),
             });
