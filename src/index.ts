@@ -18,14 +18,7 @@ import 'modules/misc';
 import 'modules/simpsons';
 import 'modules/stonks';
 import TriviaController from 'modules/trivia';
-import { logdebug, registry, register } from 'core';
+import { register } from 'core';
 
 register(JokesController);
 register(TriviaController);
-
-setTimeout(() => {
-    logdebug(
-        'Commands registered:',
-        registry.all().map(cmd => cmd.commandName)
-    );
-}, 500);

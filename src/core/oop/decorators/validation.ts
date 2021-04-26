@@ -6,7 +6,6 @@ export const validate = <T extends Object>(
     validatorClass: Constructable<T>,
     ...validators: Exclude<keyof T, 'prototype'>[]
 ) => {
-    console.log(validators);
     return <T>(
         target: Object,
         property: string | symbol,

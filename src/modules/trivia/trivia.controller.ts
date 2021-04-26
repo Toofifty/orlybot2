@@ -7,6 +7,7 @@ import {
     before,
     Message,
 } from 'core';
+import TriviaStore from './trivia.store';
 import TriviaValidator from './trivia.validator';
 
 @group('trivia')
@@ -17,9 +18,12 @@ export default class TriviaController extends Controller {
     @maincmd('Start a game of trivia!')
     async start(
         message: Message,
+        store: TriviaStore,
         @validate(TriviaValidator, 'validDifficulty')
         difficulty = 'easy'
     ) {
+        const printTrivia = () => {};
+
         message.reply('Ran command');
     }
 
