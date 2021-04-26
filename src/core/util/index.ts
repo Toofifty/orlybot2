@@ -7,3 +7,4 @@ export { pre, tag, emoji, mention } from './strings';
 export { randint, choose, shuffle } from './random';
 export { dateTZ } from './date';
 export { omit } from './object';
+export * from './typeguards';

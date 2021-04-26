@@ -1,6 +1,6 @@
 import { Store, Channel, injectable } from 'core';
 
-interface ITriviaStore {
+export interface ITriviaStore {
     enabledCategories: number[];
     noReply: boolean;
     autostart: boolean;
@@ -10,6 +10,7 @@ interface ITriviaStore {
         options: string[];
         answer: string;
         difficulty: string;
+        category: string;
     } | null;
 }
 
@@ -17,6 +18,8 @@ interface TriviaStore extends ITriviaStore {}
 
 @injectable()
 class TriviaStore extends Store<ITriviaStore> {
+    forceReset = true;
+
     initial = {
         enabledCategories: [],
         noReply: true,

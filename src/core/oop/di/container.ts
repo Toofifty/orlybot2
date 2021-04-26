@@ -40,14 +40,21 @@ class ContainerClass {
             return this.execute(obj, property, ...args);
         }
 
-        const tokens =
+        const tokens: object[] =
             Reflect.getMetadata('design:paramtypes', target, property) ?? [];
 
-        console.log(tokens);
-
         const injections = await Promise.all(
-            tokens.map(this.resolve.bind(this))
+            tokens
+                .filter(
+                    token =>
+                        !token.toString().startsWith('function String()') &&
+                        !token.toString().startsWith('function Object()')
+                )
+                .map(this.resolve.bind(this))
         );
+
+        console.log('injections', injections);
+        console.log('args', args);
 
         return target[property].bind(target)(...injections, ...args);
     }

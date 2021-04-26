@@ -5,6 +5,7 @@ import { NoUndefined } from './types';
 export class Store<T> extends StoreModel<T> {
     protected initial: NoUndefined<T>;
     protected data: NoUndefined<T>;
+    protected forceReset = false;
 
     constructor(key: string) {
         super(key, []);
@@ -22,7 +23,7 @@ export class Store<T> extends StoreModel<T> {
     async load() {
         this.data = (await db.get<NoUndefined<T>>(this.key))!;
 
-        if (!this.data) {
+        if (!this.data || this.forceReset) {
             this.data = this.initial;
             this.createFields();
             await this.save();
