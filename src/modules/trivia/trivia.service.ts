@@ -1,7 +1,7 @@
 import he from 'he';
 import fetch from 'node-fetch';
 
-import { Message, Channel, registry, Command, User } from 'core';
+import { Message, Channel, registry, Command, User, CommandRunner } from 'core';
 import { assert, shuffle, choose } from 'core/util';
 import TriviaStore from './trivia.store';
 import { Category } from './types';
@@ -25,6 +25,12 @@ export default class TriviaService {
         ).then(res => res.json());
 
         return data.trivia_categories;
+    }
+
+    async fetchCategory(category: string): Promise<Category | undefined> {
+        return (await this.fetchCategories()).find(cat =>
+            cat.name.toLowerCase().includes(category.toLowerCase())
+        );
     }
 
     /**
@@ -91,11 +97,16 @@ export default class TriviaService {
     /**
      * De-register listeners and remove game data from the store
      */
-    async endTrivia(store: TriviaStore) {
+    async endTrivia(message: Message, store: TriviaStore) {
         this.destroyAnswerListeners(store);
+        const { difficulty } = store.game ?? {};
 
         store.game = null;
         store.save();
+
+        if (store.autostart) {
+            CommandRunner.run(`trivia ${difficulty}`, message);
+        }
     }
 
     /**
@@ -141,7 +152,7 @@ export default class TriviaService {
             );
         }
         message.addReaction('white_check_mark');
-        this.endTrivia(store);
+        this.endTrivia(message, store);
     }
 
     private async onIncorrect(store: TriviaStore, message: Message) {

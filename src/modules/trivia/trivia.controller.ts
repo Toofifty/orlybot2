@@ -66,9 +66,10 @@ export default class TriviaController extends Controller {
     }
 
     @cmd('cancel', 'Cancel broken trivia')
+    @aliases('stop')
     @validate(TriviaValidator, 'gameRunning')
     async cancel(message: Message, store: TriviaStore, service: TriviaService) {
-        service.endTrivia(store);
+        service.endTrivia(message, store);
         message.reply('Trivia cancelled :(');
     }
 
@@ -92,5 +93,21 @@ export default class TriviaController extends Controller {
         );
 
         message.reply(`*Trivia Leaderboard*\n${userScores.join('\n')}`);
+    }
+
+    @cmd('autostart', 'Toggle trivia auto-start')
+    async autostart(message: Message, store: TriviaStore, value = 'on') {
+        store.autostart = ['on', 'true', 'yes'].includes(value);
+        store.save();
+
+        message.reply(`${store.autostart ? 'Enabled' : 'Disabled'} autostart`);
+    }
+
+    @cmd('replies', 'Toggle trivia replies')
+    async replies(message: Message, store: TriviaStore, value = 'on') {
+        store.noReply = !['on', 'true', 'yes'].includes(value);
+        store.save();
+
+        message.reply(`${!store.noReply ? 'Enabled' : 'Disabled'} replies`);
     }
 }
