@@ -33,11 +33,11 @@ class ContainerClass {
     public async execute<T>(
         target: T,
         property: string | symbol,
-        ...args: any[]
+        args?: any[]
     ) {
         if ('prototype' in target) {
             const obj = await this.resolve(target as any);
-            return this.execute(obj, property, ...args);
+            return this.execute(obj, property, args);
         }
 
         const tokens: object[] =
@@ -53,10 +53,7 @@ class ContainerClass {
                 .map(this.resolve.bind(this))
         );
 
-        console.log('injections', injections);
-        console.log('args', args);
-
-        return target[property].bind(target)(...injections, ...args);
+        return target[property].bind(target)(...injections, ...(args ?? []));
     }
 }
 

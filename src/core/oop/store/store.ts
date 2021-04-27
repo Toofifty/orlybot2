@@ -25,9 +25,10 @@ export class Store<T> extends StoreModel<T> {
 
         if (!this.data || this.forceReset) {
             this.data = this.initial;
-            this.createFields();
             await this.save();
         }
+
+        this.createFields();
     }
 
     /**

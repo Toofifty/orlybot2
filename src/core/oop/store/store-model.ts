@@ -16,6 +16,7 @@ export class StoreModel<T> {
 
     createFields() {
         Object.keys(this.data).forEach(key => {
+            console.log('define', key);
             Object.defineProperty(this, key, {
                 get: () => this.data[key],
                 set: value => (this.data[key] = value),

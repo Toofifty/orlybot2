@@ -8,6 +8,7 @@ import 'modules/articulate';
 import 'modules/cleverbot';
 import 'modules/countdown';
 import 'modules/crossword';
+import 'modules/debug';
 import 'modules/dungeon';
 import 'modules/gpt3';
 import 'modules/inspirobot';

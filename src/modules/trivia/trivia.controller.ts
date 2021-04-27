@@ -7,18 +7,27 @@ import {
     before,
     Message,
     Channel,
+    after,
+    aliases,
 } from 'core';
 import TriviaStore from './trivia.store';
 import TriviaValidator from './trivia.validator';
-import { assert } from 'core/util';
 import TriviaService from './trivia.service';
 
 @group('trivia')
 export default class TriviaController extends Controller {
     @before
-    before() {}
+    before(message: Message) {
+        message.addReaction('books');
+    }
+
+    @after
+    after(message: Message) {
+        message.removeReaction('books');
+    }
 
     @maincmd('Start a game of trivia!')
+    @aliases('t')
     async start(
         message: Message,
         channel: Channel,
@@ -44,14 +53,18 @@ export default class TriviaController extends Controller {
         );
 
         store.game = { ...triviaData, difficulty };
-        store.save();
+        await store.save();
 
         service.printTrivia(message, store);
         service.createAnswerListeners(channel, store);
     }
 
     @cmd('cancel', 'Cancel broken trivia')
-    async cancel() {}
+    @validate(TriviaValidator, 'gameRunning')
+    async cancel(message: Message, store: TriviaStore, service: TriviaService) {
+        service.endTrivia(store);
+        message.reply('Trivia cancelled :(');
+    }
 
     @cmd('score', "Get a user's trivia score")
     async score() {}

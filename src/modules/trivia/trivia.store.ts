@@ -18,8 +18,6 @@ interface TriviaStore extends ITriviaStore {}
 
 @injectable()
 class TriviaStore extends Store<ITriviaStore> {
-    forceReset = true;
-
     initial = {
         enabledCategories: [],
         noReply: true,
