@@ -302,6 +302,15 @@ export default class Command {
             : this.keyword;
     }
 
+    public get commandNameForHelp(): string {
+        return this.parent
+            ? `${this.parent.commandNameForHelp}${this.keyword}`.replace(
+                  this.parent.keyword,
+                  '\t'
+              )
+            : this.commandName;
+    }
+
     /**
      * Get the help text for this command and all sub
      * commands.
@@ -312,13 +321,13 @@ export default class Command {
         if (this.hidden) return [];
         return [
             [
-                this.parent
-                    ? this.commandName.replace(this.parent.commandName, '\t')
-                    : this.commandName,
+                this.commandNameForHelp,
                 ...this.arguments.map(arghelp),
-                '-',
+                this.description && '-',
                 this.description,
-            ].join(' '),
+            ]
+                .filter(Boolean)
+                .join(' '),
             ...flat(Object.values(this.subcommands).map(sub => sub.help)),
         ];
     }
@@ -335,7 +344,7 @@ export default class Command {
             [
                 this.keywords,
                 ...this.arguments.map(arghelp),
-                '-',
+                this.description && '-',
                 this.description,
             ].join(' '),
             ...flat(Object.values(this.subcommands).map(sub => sub.help)),

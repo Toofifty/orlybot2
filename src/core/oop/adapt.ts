@@ -35,6 +35,16 @@ export const adapt = async <T extends Controller>(
         cmd.nest(sub);
     });
 
+    const delegates = meta<Constructable<any>[]>(Meta.GROUP_DELEGATES) ?? [];
+    console.log(delegates);
+    const promises = delegates.map(async delegate => {
+        const builtCommand = await adapt(delegate);
+        builtCommand.forEach(builtSubcommand => {
+            cmd.nest(builtSubcommand);
+        });
+    });
+    await Promise.all(promises);
+
     return [cmd];
 };
 

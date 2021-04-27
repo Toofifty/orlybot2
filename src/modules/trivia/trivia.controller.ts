@@ -9,12 +9,16 @@ import {
     Channel,
     after,
     aliases,
+    User,
+    delegate,
 } from 'core';
 import TriviaStore from './trivia.store';
 import TriviaValidator from './trivia.validator';
 import TriviaService from './trivia.service';
+import TriviaCategoriesController from './categories.controller';
 
 @group('trivia')
+@delegate(TriviaCategoriesController)
 export default class TriviaController extends Controller {
     @before
     before(message: Message) {
@@ -37,6 +41,8 @@ export default class TriviaController extends Controller {
         difficulty = 'easy'
     ) {
         if (store.game) {
+            service.destroyAnswerListeners(store);
+            service.createAnswerListeners(channel, store);
             return service.printTrivia(message, store);
         }
 
@@ -67,8 +73,24 @@ export default class TriviaController extends Controller {
     }
 
     @cmd('score', "Get a user's trivia score")
-    async score() {}
+    async score(message: Message, user = 'you') {
+        const target = user !== 'you' ? await User.find(user) : message.user;
+
+        const wins = target.meta('trivia_wins');
+        const guesses = target.meta('trivia_bad_guesses');
+        message.reply(
+            `${target} has ${wins} wins and ${guesses} total incorrect guesses`
+        );
+    }
 
     @cmd('leaderboard', 'Check out the trivia leaderboard')
-    async leaderboard() {}
+    @aliases('lb', 'l', 'scoreboard', 'sb', 's')
+    async leaderboard(message: Message, service: TriviaService) {
+        const userScores = (await service.getTriviaScores()).map(
+            ({ user, score, ratio }, i) =>
+                `${i + 1}. ${user} - ${score} points (${ratio}%)`
+        );
+
+        message.reply(`*Trivia Leaderboard*\n${userScores.join('\n')}`);
+    }
 }

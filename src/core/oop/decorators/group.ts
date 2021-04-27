@@ -1,4 +1,5 @@
 import { Meta } from '../meta';
+import { Constructable } from '../di/container';
 
 /**
  * Create an "umbrella" command for all the subcommands within.
@@ -25,4 +26,12 @@ export const before: MethodDecorator = (target, property) => {
  */
 export const after: MethodDecorator = (target, property) => {
     Meta.set(Meta.GROUP_AFTER, property, target);
+};
+
+export const delegate = (
+    ...delegates: Constructable<any>[]
+): ClassDecorator => {
+    return target => {
+        Meta.set(Meta.GROUP_DELEGATES, delegates, target.prototype);
+    };
 };

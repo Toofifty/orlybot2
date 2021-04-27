@@ -1,5 +1,4 @@
 import { Meta } from '../meta';
-import { loginfo } from 'core/log';
 import { CommandArgument } from 'core/commands';
 
 const getArguments = (func: any): CommandArgument[] =>
@@ -12,7 +11,7 @@ const getArguments = (func: any): CommandArgument[] =>
         .replace(/^[^(]*[(]/, '')
         .split(',')
         .filter(Boolean)
-        .map(param => {
+        .map((param: string) => {
             const [, name, def] =
                 param.match(/((?:\.\.\.)?\w+)(?:='(.*)')?/) ?? [];
             return { name, def, required: !def };

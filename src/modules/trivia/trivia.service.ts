@@ -1,7 +1,7 @@
 import he from 'he';
 import fetch from 'node-fetch';
 
-import { Message, Channel, registry, Command } from 'core';
+import { Message, Channel, registry, Command, User } from 'core';
 import { assert, shuffle, choose } from 'core/util';
 import TriviaStore from './trivia.store';
 import { Category } from './types';
@@ -80,15 +80,44 @@ export default class TriviaService {
     }
 
     /**
-     * De-register listeners and remove game data from the store
+     * De-register listeners
      */
-    async endTrivia(store: TriviaStore) {
+    async destroyAnswerListeners(store: TriviaStore) {
         store.game?.options.forEach(option => {
             registry.unregister(option.toLowerCase());
         });
+    }
+
+    /**
+     * De-register listeners and remove game data from the store
+     */
+    async endTrivia(store: TriviaStore) {
+        this.destroyAnswerListeners(store);
 
         store.game = null;
         store.save();
+    }
+
+    /**
+     * Get trivia score information for all users with trivia wins
+     * (not channel specific)
+     */
+    async getTriviaScores() {
+        return (await User.all())
+            .filter(user => user.meta<number>('trivia_wins') > 0)
+            .map(user => ({
+                user,
+                score:
+                    user.meta<number>('trivia_wins') -
+                    (user.meta<number>('trivia_bad_guesses') ?? 0),
+                ratio: (
+                    (user.meta<number>('trivia_wins') /
+                        ((user.meta<number>('trivia_bad_guesses') ?? 0) +
+                            user.meta<number>('trivia_wins') || 1)) *
+                    100
+                ).toFixed(0),
+            }))
+            .sort((a, b) => (a.score < b.score ? 1 : 0));
     }
 
     private async onCorrect(store: TriviaStore, message: Message) {
