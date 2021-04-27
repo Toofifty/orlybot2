@@ -11,6 +11,8 @@ enum CommandPermission {
 }
 
 /**
+ * @deprecated Use the OOP controllers instead
+ *
  * Command class and namespace.
  *
  * You probably want to use `Command.create(...)`.
@@ -88,6 +90,8 @@ export default class Command {
     public hidden?: boolean;
 
     /**
+     * @deprecated Use the OOP controllers instead
+     *
      * Create and register a new command. The resulting object
      * can be chained to set properties.
      *
