@@ -1,8 +1,8 @@
-# Orlybot 2.0.0
+# Orlybot 2.1.0
 
 `orlybot` is a Slackbot written using Typescript/Node using the `@slack/web-api` and `@slack/rtm-api` packages.
 
-## Getting started
+# Getting started
 
 Get started like any other project:
 
@@ -12,98 +12,387 @@ Get started like any other project:
 * Run for development with `yarn bot`
 * Build with `yarn build`
 
-## Writing commands
+# Writing commands
 
-Keyword commands can easily be added by making a new file or directory in `src/modules`, and importing it in `src/index.ts`.
+## File generation
 
-In your new module, you need to import the command factory with:
+`hygen` can be used to generate common types of classes needed to develop commands. It's recommended to install `hygen` globally, however you can use it via `npx` in each command.
 
-```ts
-import { Command } from 'core/commands';
+```bash
+# install globally
+yarn global add hygen
+# use
+hygen <generator> <action> [...args]
+
+# or
+npx hygen <generator> <action> [...args]
 ```
 
-and then you can use the factory to create commands, add descriptions, arguments and more.
+## Controllers
 
-```ts
-Command.create('test', (message, args) => {
-    // do something
-})
-    .desc('Test') // Add a help text description
-    .arg({ name: 'test', def: 'default value', required: false }) // Add an argument
-    .isPhrase() // enable phrase checking mode (so command can include spaces)
-    .admin() // lock the command to only admin users
-    .alias('t', 'tst') // add alias command(s) that will function exactly the same
-    .hide() // hide the command from help text
-    // add a sub command (note the use of Command.sub, not create)
-    .nest(
-        Command.sub('sub', message => { ... })
-            .desc('Subcommand of test')
-    );
+To generate a controller, use this `hygen` command
+
+```bash
+hygen controller new --name <module_name>
 ```
 
-## The `message` object and `args`
+This will generate a controller and containing module inside the `src/modules/` directory. 
 
-The `Message` object passed into the command callback contains the complete context of the command's execution - the user, channel, message text, and original arguments.
+### Ungrouped commands
 
-Correctly tokenized arguments are passed as the second parameter to the callback, and these can easily be destructured into individual parts with default values. `args` will always be an array of strings, so keep than in mind. Argument names don't have to match those given in the `.args()` chained method.
-
-```ts
-Command.create('roll', (message, [sides = '6'])) => {
-    const max = Number(sides);
-    // ...
-})
-    .arg({ name: 'sides', def: '6' });
-```
-
-### Responding to users
-
-There are two super simple ways to respond to a message. First, you can just return a string from the function (`Promise<string>`s will also work):
+To add an ungrouped command, create a class method and use the `@cmd(keyword, description)` decorator to add metadata.
 
 ```ts
-Command.create('say', (_, args) => args.join(' '));
+export default class ModuleController extends Controller {
+    @cmd('keyword', 'This is the description')
+    command() {
+        console.log('ran command');
+    }
+}
 ```
 
-The bot will automatically `reply` with the returned string. If the command requires higher priviledges, the reply will be `ephemeral` (`reply` and `ephemeral` explained below).
+This will register a command that can be triggered by sending `@orlybot` "keyword" in Slack. Any amount of ungrouped commands can be added to the controller. If the keyword is reused, only one command will be correctly registered.
 
-You can also call one of the `reply` methods on the `message` object itself: `reply`, `replyEphemeral` and `replyPrivately`.
+### Grouped commands
 
+Commands can also be grouped under an umbrella/module command. This is preferred to using ungrouped commands when the commands are tightly related.
 
-#### `reply`
+To create a group on a controller, use the `@group(name)` decorator.
+
+```ts
+@group('mygroup')
+export default class ModuleController extends Controller {}
+```
+
+You can now add sub-commands in the same way as the ungrouped commands above, using the `@cmd` decorator.
+
+```ts
+@group('mygroup')
+export default class ModuleController extends Controller {
+    @cmd('subcommand', 'This is the subcommand')
+    command() {
+        console.log('ran command');
+    }
+}
+```
+```sh
+# Generated help text
+mygroup
+    subcommand - This is the subcommand
+```
+
+This will then be able to be triggered by sending `@orlybot` "mygroup subcommand".
+
+#### Main command
+
+If you'd like to attach a function to the group itself; i.e., the "main" command, you just need to use the `@maincmd(description)` decorator instead of `@cmd`.
+
+```ts
+@group('mygroup')
+export default class ModuleController extends Controller {
+    @maincmd('This is the main command')
+    main() {
+        console.log('ran main command');
+    }
+}
+```
+```sh
+# Generated help text
+mygroup - This is the main command
+```
+
+This will then be able to be triggered by sending `@orlybot` "mygroup".
+All further decorators of this method will apply to the group's main command.
+
+`@maincmd` cannot be used outside of a `@group`, and should only be used once per group. Subcommands can still be added alongside the main command, with `@cmd`.
+
+### Dependency injection
+
+Command methods will have their dependencies injected automatically, so you can easily specify what context you need for the command. Most likely, you'll need the `Message` object to reply to the user-
+
+```ts
+export default class ModuleController extends Controller {
+    @cmd('hello', 'Say hello!')
+    command(message: Message) {
+        message.reply('Hello world');
+    }
+}
+```
+
+Three objects are available as singletons, and contain information about the message. These are `Message`, `Channel`, and `User`. You can `reply` to each of these, although it's recommended to reply only to the `Message` as it will automatically determine where the response should go (channel or IM).
+
+You can also specify your own dependencies that may be needed for the module. You can inject any class just by typing one of the method's parameters. Commonly this is used to inject a `Store` or `Service`.
+
+```ts
+@group('game')
+export default class GameController extends Controller {
+    @cmd('start', 'Start the game')
+    command(message: Message, store: GameStore, service: GameService) {
+        store.game = await service.startGame();
+        store.save();
+        message.reply('Game started!');
+    }
+}
+```
+
+### Command arguments
+
+Command arguments will also be injected into the command's method as strings. The naming and default values in the method signature are important - as these will be used to display argument help.
+
+```ts
+export default class ModuleController extends Controller {
+    @cmd('hello', 'Say hello!')
+    command(message: Message, name: string = 'world') {
+        message.reply(`Hello ${name}!`);
+    }
+}
+```
+```sh
+# Generated help text
+hello [name="world"] - Say hello!
+```
+
+Using a default value like this (`'world'`) will not only display the value in the help text, but will also mark the argument as optional. If no default is specified, the argument will be required and the command will fail if it is not present. If you must allow for an optional argument with no default, set the parameter default to empty string `''`.
+
+You can also use rest parameters to accept any amount of arguments, and this too will be reflected nicely in the help text.
+
+```ts
+export default class ModuleController extends Controller {
+    @cmd('hello', 'Say hello to some users!')
+    command(message: Message, ...users: string[]) {
+        message.reply(`Hello ${users.map(user => mention(user)).join(', ')}!`);
+    }
+}
+```
+```sh
+# Generated help text
+hello <...users> - Say hello!
+```
+
+Although the help text indicates those arguments are required, they will not be automatically validated.
+
+#### Validation
+
+Arguments can be individually validated using the `@validate(class, ...methodNames)` decorator. See [Validators](#Validators) below.
+
+```ts
+import ModuleValidator from './module.validator';
+
+export default class ModuleController extends Controller {
+    @cmd('hello', 'Say hello to a planet!')
+    command(
+        message: Message, 
+        @validate(ModuleValidator, 'nameIsAPlanet')
+        name: string = 'world'
+    ) {
+        message.reply(`Hello ${name}!`);
+    }
+}
+```
+
+## Stores
+
+Stores are used to persist data between restarts of the bot. Because of timeout issues with the Slack API, the main instance of the bot (`@mathobot`) is restarted on a cron every 2 hours. Therefore, it is important to write module data to disk so it can be restored.
+
+To create a store for your module, simply run this `hygen` generator:
+```bash
+hygen store new --name <module_name>
+```
+
+This will scaffold a new store inside your module directory. By default, the data for each channel that interacts with the store is saved in a key formatted as `<module_name>:<channel.id>`. This can be changed if required.
+
+### Defining data types & initial data
+
+Before you can save data to your store, you need to declare the type of the data you wish to store. This can be done inside the `IModuleStore` interface that is exported at the top of the store file.
+
+Note that you cannot use optional or `undefined` properties, here - use `null` if necessary.
+
+```ts
+export interface IModuleStore {
+    usersGreeted: string[];
+}
+```
+
+Once the store type is declared, you can define the initial data used to populate the store by assigning it to the `initial` property on the `ModuleStore` class. Here you will get type errors if you allow any of your store properties to be `undefined`.
+
+```ts
+@injectable()
+class ModuleStore extends Store<IModuleStore> {
+    initial = { usersGreeted: [] };
+}
+```
+
+### Using the store
+
+The store is now ready to be dependency injected into your command method. You can access and mutate data within your store just on the `ModuleStore` object itself, and `save()` it when your changes are made.
+
+```ts
+import ModuleStore from './module.store';
+
+export default class ModuleController extends Controller {
+    @cmd('hello', "Say hello to users that haven't been greeted yet")
+    command(message: Message, store: ModuleStore, ...users: string[]) {
+        const newUsers = users.filter(
+            user => !store.usersGreeted.includes(user)
+        );
+        message.reply(`Hello ${newUsers.map(user => mention(user)).join(', ')}!`);
+        store.usersGreeted = [...store.usersGreeted, ...newUsers];
+        store.save();
+    }
+}
+```
+
+### Troubleshooting
+
+At any time (as an admin) you can read the store of a module using the `debug db read <key>` command. For example, `debug db read module:$channel` will return `{ usersGreeted: [], _id: ..., _rev: ... }`.
+
+If you have issues with bad data persisting in your store, you can force it to reset next time it loads. Just set the `forceReset` property on the store to `true` and restart the bot.
+
+```ts
+@injectable()
+class ModuleStore extends Store<IModuleStore> {
+    forceReset = true;
+```
+
+## Validators
+
+Validators help remove verbose argument checking logic and package it away in a way that makes it easy to use and reuse.
+
+To create a store for your module, simply run this `hygen` generator:
+```bash
+hygen validator new --name <module_name>
+```
+
+This will scaffold a new validator inside your module directory, with an example validator factory method.
+
+Validator factory methods are simply class methods that return a `Validator` function. The validator factory methods can accept dependencies with DI via teh `@injectable()` decorator, so it's easy to validate arguments against an internal/external service, or a store.
+
+The `Validator` function returned should accept the argument value, index, and context of other arguments provided. If the validation passes, the function should return `true`. If not, it should return a relevant error message, in a string. The function can be async if necessary.
+
+Default argument values **are not** passed in to validators - these arguments will be `undefined`.
+
+```ts
+export default class ModuleValidator {
+    nameIsAPlanet(): Validator {
+        return name =>
+            !name ||
+            ['mercury', 'venus', 'earth', 'world'].includes(name) ||
+            'Invalid planet';
+    }
+
+    @injectable()
+    nameIsNotBlocked(store: ModuleStore): Validator {
+        return name =>
+            !store.blockedPlanets.includes(name) ||
+            'Planet is blocked';
+    }
+}
+```
+
+The validators can then be used in the `@validate(class, ...methodNames)` decorator, which can accept multiple validation methods from a single class.
+
+```ts
+import ModuleValidator from './module.validator';
+
+export default class ModuleController extends Controller {
+    @cmd('hello', "Say hello to a planet (that isn't blocked)!")
+    command(
+        message: Message, 
+        @validate(ModuleValidator, 'nameIsAPlanet', 'nameIsNotBlocked')
+        name: string = 'world'
+    ) {
+        message.reply(`Hello ${name}!`);
+    }
+}
+```
+
+## Services
+
+Services are simply used to extract "business" logic from your controller, in a way that allows you to reuse them. Service methods **are not** dependency injectable, also the class itself is.
+
+To create a service for your module, simply run this `hygen` generator:
+```bash
+hygen service new --name <module_name>
+```
+
+This will scaffold a new service inside your module directory.
+
+An example service method, to fetch a random word:
+
+```ts
+export default class ModuleService {
+    async fetchRandomWord(): string {
+        const [word] = await fetch('https://www.thegamegal.com/wordgenerator/generator.php')
+            .then(res => res.json())
+            .then(res => res.words);
+        return word;
+    }
+}
+
+# Usage
+import ModuleService from './module.service';
+
+export default class ModuleController extends Controller {
+    @cmd('word', 'Get a random word')
+    async randomWord(message: Message, service: ModuleService) {
+        message.reply(await service.fetchRandomWord());
+    }
+}
+```
+
+## Delegated (sub) controllers
+
+```ts
+// TODO
+```
+
+## User object
+
+```ts
+// TODO
+```
+
+### Storing data on a user
+
+```ts
+// TODO
+```
+
+### Mentioning
+
+```ts
+// TODO
+```
+
+## Message object
+
+```ts
+// WIP
+```
+
+You can call one of the `reply` methods on the `Message` object to respond to a user message: `reply`, `replyEphemeral` and `replyPrivately`.
+
+### `reply`
 
 If the message is in a channel, the bot will post the new message into the same channel. Otherwise if the message was from an IM, it will be responded to privately.
 
 ```ts
-Command.create('say', (message, args) => {
-    message.reply(args.join(' '));
-});
+message.reply(text, attachments?);
 ```
 
-#### `replyEphemeral`
+### `replyEphemeral`
 
 Replies in a user-specific temporary message that can't be seen by other users. Works both in channels and IMs.
 
 ```ts
-Command.create('say', (message, args) => {
-    message.replyEphemeral(args.join(' '));
-});
+message.replyEphemeral(text);
 ```
 
-#### `replyPrivately`
+### `replyPrivately`
 
 Force a response via IM even if the original message was in a channel.
 
 ```ts
-Command.create('say', (message, args) => {
-    message.replyPrivately(args.join(' '));
-});
+message.replyPrivately(text, attachments?);
 ```
-
-### Finding users
-
-## Storing data
-
-### On a user
-
-### In a document
-
 
