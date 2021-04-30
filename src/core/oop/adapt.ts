@@ -3,6 +3,7 @@ import Container, { Constructable } from './di/container';
 import { Controller } from './controller';
 import { Meta, MetaKey } from './meta';
 import { StoredValidator, Validator } from './types';
+import { KwargDefinition } from 'core/model/kwargs';
 
 const getMetaFactory = (target: Object, property?: string) => <T>(
     key: MetaKey
@@ -69,6 +70,14 @@ const createCommand = (cls: Controller, method: string, isGroup = false) => {
     (meta<CommandArgument[]>(Meta.COMMAND_ARGS) ?? []).forEach(arg =>
         cmd.arg(arg)
     );
+
+    (
+        meta<KwargDefinition[]>(Meta.COMMAND_KWARGS) ?? []
+    ).forEach(({ key, description }) => cmd.kwarg(key, description));
+
+    (
+        meta<KwargDefinition[]>(Meta.COMMAND_FLAGS) ?? []
+    ).forEach(({ key, description }) => cmd.kwarg(key, description));
 
     return cmd;
 };

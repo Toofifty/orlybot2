@@ -4,6 +4,7 @@ import { CommandAction, CommandArgument } from './types';
 import registry from './registry';
 import { flat } from 'core/util/array';
 import { loginfo } from 'core/log';
+import { KwargDefinition, Match } from 'core/model/kwargs';
 
 enum CommandPermission {
     USER = 0,
@@ -88,6 +89,11 @@ export default class Command {
      * Whether this command is hidden from help text.
      */
     public hidden?: boolean;
+
+    public kwargKeywords: KwargDefinition[] = [];
+    public kwargFlags: KwargDefinition[] = [
+        { key: ['help', 'h'], description: 'Get help about this command.' },
+    ];
 
     /**
      * @deprecated Use the OOP controllers instead
@@ -225,6 +231,16 @@ export default class Command {
      */
     public isHidden(hidden: boolean = true) {
         return this.hide(hidden);
+    }
+
+    public kwarg(key: Match, description: string) {
+        this.kwargKeywords.push({ key, description });
+        return this;
+    }
+
+    public flag(key: Match, description: string) {
+        this.kwargFlags.push({ key, description });
+        return this;
     }
 
     /**

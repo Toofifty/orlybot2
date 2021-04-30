@@ -6,6 +6,7 @@ import { logerror } from 'core/log';
 import UserError from './user-error';
 import Command from './command';
 import registry from './registry';
+import Kwargs from 'core/model/kwargs';
 
 /**
  *
@@ -95,6 +96,19 @@ export default class CommandRunner {
         Container.singleton(User, this.message.user);
 
         try {
+            const kwargs = this.message.parseKwargs(
+                this.command.kwargKeywords.map(({ key }) => key),
+                this.command.kwargFlags.map(({ key }) => key)
+            );
+            Container.singleton(Kwargs, kwargs);
+
+            if (kwargs.has('help')) {
+                return await CommandRunner.run(
+                    `help ${this.command.keyword}`,
+                    this.message
+                );
+            }
+
             return await this.command.run(this.message);
         } catch (e) {
             if (e instanceof UserError) {

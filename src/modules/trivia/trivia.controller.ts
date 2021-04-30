@@ -16,6 +16,7 @@ import TriviaStore from './trivia.store';
 import TriviaValidator from './trivia.validator';
 import TriviaService from './trivia.service';
 import TriviaCategoriesController from './categories.controller';
+import Kwargs from 'core/model/kwargs';
 
 @group('trivia')
 @delegate(TriviaCategoriesController)
@@ -37,6 +38,7 @@ export default class TriviaController extends Controller {
         channel: Channel,
         store: TriviaStore,
         service: TriviaService,
+        kwargs: Kwargs,
         @validate(TriviaValidator, 'validDifficulty')
         difficulty = 'easy'
     ) {

@@ -18,6 +18,8 @@ const keys = {
     COMMAND_IS_ADMIN: 'bot:command_is_admin',
     COMMAND_ARGS: 'bot:command_args',
     COMMAND_ARGSTART: 'bot:command_argstart',
+    COMMAND_KWARGS: 'bot:command_kwargs',
+    COMMAND_FLAGS: 'bot:command_flags',
 
     COMMAND_VALIDATION: 'bot:command_validation',
     COMMAND_ARGS_VALIDATION: 'bot:command_args_validation',

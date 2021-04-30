@@ -6,6 +6,7 @@ import bot from 'core/bot';
 import { tokenize, split } from 'core/util';
 import BotMessage from './bot-message';
 import { logerror } from 'core/log';
+import Kwargs, { Match } from './kwargs';
 
 const CHANNEL_ALIAS_REGEX = /^<#(\w{9,11})(?:\|[\w-]+)?>:\s*/;
 const USER_ALIAS_REGEX = /^<@(\w{9})(?:\|[\w-]+)?>:\s*/;
@@ -122,6 +123,16 @@ export default class Message extends BaseModel {
         }
 
         return this;
+    }
+
+    /**
+     * Parse kwargs and remove them from the message's text
+     */
+    public parseKwargs(keywords: Match[], flags: Match[]): Kwargs {
+        const { kwargs, message } = Kwargs.parse(this.text, keywords, flags);
+        this.text = message;
+        console.log({ kwargs, message });
+        return kwargs;
     }
 
     /**

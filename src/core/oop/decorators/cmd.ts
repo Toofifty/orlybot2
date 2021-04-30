@@ -1,5 +1,6 @@
 import { Meta } from '../meta';
 import { CommandArgument } from 'core/commands';
+import { Match } from 'core/model/kwargs';
 
 const getArguments = (func: any): CommandArgument[] =>
     func
@@ -117,4 +118,30 @@ export const hidden: MethodDecorator = (target, property) => {
  */
 export const admin: MethodDecorator = (target, property) => {
     Meta.set(Meta.prop(Meta.COMMAND_IS_ADMIN, property), true, target);
+};
+
+/**
+ * Listen to a kwarg when this command is run
+ */
+export const kwarg = (key: Match, description: string): MethodDecorator => {
+    return (target, property) => {
+        Meta.push(
+            Meta.prop(Meta.COMMAND_KWARGS, property),
+            { key, description },
+            target
+        );
+    };
+};
+
+/**
+ * Listen to a flag when this command is run
+ */
+export const flag = (key: Match, description: string): MethodDecorator => {
+    return (target, property) => {
+        Meta.push(
+            Meta.prop(Meta.COMMAND_FLAGS, property),
+            { key, description },
+            target
+        );
+    };
 };
