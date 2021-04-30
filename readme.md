@@ -328,8 +328,8 @@ export default class ModuleService {
         return word;
     }
 }
-
-# Usage
+```
+```ts
 import ModuleService from './module.service';
 
 export default class ModuleController extends Controller {
@@ -342,26 +342,86 @@ export default class ModuleController extends Controller {
 
 ## Delegated (sub) controllers
 
-```ts
-// TODO
+You can also use a decorator to delegate sub commands to another controller - allowing you to more cleanly separate your code.
+
+To create a new sub controller for your module, simply run this `hygen` generator:
+```bash
+hygen controller sub --module <module_name> --name <controller_name>
 ```
+
+This will scaffold a new controller inside your module directory.
+
+All you need to do to "register" this new controller as a sub command of your main controller is use the `@delegate(controller)` decorator.
+
+```ts
+import ModuleSubmoduleController from './submodule.controller';
+
+@group('mygroup')
+@delegate(ModuleSubmoduleController)
+export default class ModuleController extends Controller {}
+```
+```ts
+@group('mysubmodule')
+export default class ModuleSubmoduleController extends Controller {
+    @maincmd('Run the submodule command')
+    main(message: Message) {
+        message.reply('Hello submodule!');
+    }
+}
+```
+```sh
+# Generated help text
+mygroup
+    mysubmodule - Run the submodule command
+```
+
+The sub controller will act as any other normal group command, though now it is nested under the parent's group keyword. You'll be able to execute the command with "mygroup mysubmodule".
 
 ## User object
 
-```ts
-// TODO
-```
+The current user is available to dependency inject using the class `User`. This allows you to access Slack information about the user, as well as store workspace-wide metadata for them.
 
 ### Storing data on a user
 
+To store metadata on the user, simply use the `meta` method to get or set data.
+
 ```ts
-// TODO
+const gameWins = user.meta<number>('game_wins');
+
+// pass new data as second parameter
+const setGameWins = (wins: number) => {
+    user.meta('game_wins', wins);
+};
+
+// or pass a function to update current metadata
+const incrementGameWins = () => {
+    user.meta<number>('game_wins', wins => wins + 1);
+};
 ```
+
+You can store any JSON-serializable type of data.
 
 ### Mentioning
 
+The simplest way to mention a user is just to convert the object to string. This is especially helpful with string interpolation
+
 ```ts
-// TODO
+message.reply(`Hello ${user}!`);
+```
+
+If you only have a user ID however, it makes sense to just use the `mention` utility function, rather than lookup the user to get the object.
+
+```ts
+message.reply(`Hello ${mention(userId)}!`);
+```
+
+### Finding other users
+
+The static `User` class can also act as a repostory to load a user by ID/tag or to get all users that have previously interacted with the bot.
+
+```ts
+const user = await User.find('@ABC123456');
+const allUsers = await User.all();
 ```
 
 ## Message object
