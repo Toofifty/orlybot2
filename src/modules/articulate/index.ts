@@ -117,7 +117,6 @@ Command.create('articulate', async message => {
 
             const active = users
                 .filter(user => {
-                    console.log(user.meta<number>('articulate_score'));
                     return user.meta<number>('articulate_score') > 0;
                 })
                 .map(user => ({

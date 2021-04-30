@@ -37,7 +37,6 @@ export const adapt = async <T extends Controller>(
     });
 
     const delegates = meta<Constructable<any>[]>(Meta.GROUP_DELEGATES) ?? [];
-    console.log(delegates);
     const promises = delegates.map(async delegate => {
         const builtCommand = await adapt(delegate);
         builtCommand.forEach(builtSubcommand => {

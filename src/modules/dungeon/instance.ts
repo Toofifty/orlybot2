@@ -41,8 +41,6 @@ export default class Instance {
 
         activeInstances.push(this);
         this.active = true;
-
-        console.log('Instance for', this.owner.slackName, 'is ready');
     }
 
     public begin() {
@@ -58,7 +56,6 @@ export default class Instance {
     }
 
     public print = (data: string) => {
-        console.log(`"${data.toString()}"`);
         if (isValidMessage(data.toString())) {
             this.channel.message(
                 `${this.characterName} (${this.owner}): ${pre(data)}`

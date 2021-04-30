@@ -12,14 +12,12 @@ const GAME_DURATION = 1;
 const games: Record<string, boolean> = {};
 
 const matchesDigits = (text: string, numbers: number[]) => {
-    console.log('checking', text);
     const check = numbers.reduce((acc, n) => {
         // remove 1 instance of n from the string
         // numbers are sorted biggest to smallest, so
         // they shouldn't interfere with eachother
         return acc.replace(n.toString(), '');
     }, text);
-    console.log('final', check);
     // if any digits left, they used too many
     return !check.match(/\d/);
 };

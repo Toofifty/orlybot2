@@ -131,7 +131,6 @@ export default class Message extends BaseModel {
     public parseKwargs(keywords: Match[], flags: Match[]): Kwargs {
         const { kwargs, message } = Kwargs.parse(this.text, keywords, flags);
         this.text = message;
-        console.log({ kwargs, message });
         return kwargs;
     }
 
