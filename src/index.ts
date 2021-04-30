@@ -19,7 +19,9 @@ import 'modules/misc';
 import 'modules/simpsons';
 import 'modules/stonks';
 import TriviaController from 'modules/trivia';
+import HelpController from 'modules/help';
 import { register } from 'core';
 
 register(JokesController);
 register(TriviaController);
+register(HelpController);

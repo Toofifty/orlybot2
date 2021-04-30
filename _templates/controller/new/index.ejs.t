@@ -1,4 +1,4 @@
 ---
 to: src/modules/<%= name %>/index.ts
 ---
-export { default } from './<%= name %>.contoller';
+export { default } from './<%= name %>.controller';

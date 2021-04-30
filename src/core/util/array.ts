@@ -38,3 +38,14 @@ export const flat = <T>(arr: T[][]): T[] =>
     }, []);
 
 export const intersect = <T>(a: T[], b: T[]) => a.filter(i => b.includes(i));
+
+export const chunk = <T>(arr: T[], size: number): T[][] =>
+    arr.reduce((result, item, index) => {
+        const chunkIndex = Math.floor(index / size);
+
+        if (!result[chunkIndex]) result[chunkIndex] = [];
+
+        result[chunkIndex].push(item);
+
+        return result;
+    }, [] as T[][]);

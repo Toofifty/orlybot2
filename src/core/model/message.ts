@@ -159,7 +159,14 @@ export default class Message extends BaseModel {
      * Reply directly to the message - in whatever context
      * the message was originally in (IM or channel).
      */
-    public async reply(text: string, attachments?: MessageAttachment[]) {
+    public async reply(
+        text: string | string[],
+        attachments?: MessageAttachment[]
+    ) {
+        if (Array.isArray(text)) {
+            text = text.join('\n');
+        }
+
         if (this.channel.isIm) return this.replyPrivately(text, attachments);
         return (
             await BotMessage.from(await this.channel.message(text, attachments))
