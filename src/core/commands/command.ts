@@ -352,11 +352,8 @@ export default class Command {
     /**
      * Get the help text for this command and all sub
      * commands.
-     *
-     * Returns an empty array if the command is hidden.
      */
     public get help(): string[] {
-        if (this.hidden) return [];
         return [
             [
                 this.commandNameForHelp,

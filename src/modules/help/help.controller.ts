@@ -12,7 +12,7 @@ export default class HelpController extends Controller {
         if (search) {
             const helpText = service.getFilteredHelpText(search);
 
-            if (helpText === '') {
+            if (helpText === pre('')) {
                 return message.reply(`Nothing found searching for "${search}"`);
             }
 
