@@ -28,8 +28,13 @@ export const numberEmoji = (n: number) =>
         n - 1
     ] ?? 'x';
 
-export const rpad = (text: string, width: number, char: string = ' ') =>
-    `${text}${char.repeat(width - text.length)}`;
+export const rpad = (text: string, width: number, char: string = ' ') => {
+    try {
+        return `${text}${char.repeat(width - text.length)}`;
+    } catch {
+        console.log(text, width, char);
+    }
+};
 
 export const lpad = (text: string, width: number, char: string = ' ') =>
     `${char.repeat(width - text.length)}${text}`;

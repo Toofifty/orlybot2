@@ -76,7 +76,7 @@ const createCommand = (cls: Controller, method: string, isGroup = false) => {
 
     (
         meta<KwargDefinition[]>(Meta.COMMAND_FLAGS) ?? []
-    ).forEach(({ key, description }) => cmd.kwarg(key, description));
+    ).forEach(({ key, description }) => cmd.flag(key, description));
 
     if (isGroup) {
         cmd.gdesc(cmeta(Meta.GROUP_DESCRIPTION));

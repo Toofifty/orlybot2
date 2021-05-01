@@ -1,4 +1,4 @@
-import { aliases, cmd, Controller, Message } from 'core';
+import { aliases, cmd, Controller, flag, Kwargs, Message } from 'core';
 import { chunk, pre, rpad } from 'core/util';
 import HelpService from './help.service';
 
@@ -8,9 +8,19 @@ const HELP_COLUMNS = 4;
 export default class HelpController extends Controller {
     @cmd('help', 'List commands and view command information')
     @aliases('h')
-    list(message: Message, service: HelpService, search?: string) {
+    @flag(['verbose', 'v'], 'Print extra information about the command.')
+    list(
+        message: Message,
+        service: HelpService,
+        kwargs: Kwargs,
+        search?: string
+    ) {
+        console.log(kwargs);
+
         if (search) {
-            const helpText = service.getFilteredHelpText(search);
+            const helpText = kwargs.has('verbose')
+                ? service.getVerboseHelpText(search)
+                : service.getHelpText(search);
 
             if (helpText === pre('')) {
                 return message.reply(`Nothing found searching for "${search}"`);

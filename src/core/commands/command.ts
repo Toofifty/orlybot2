@@ -1,5 +1,5 @@
 import Message from 'core/model/message';
-import { arghelp } from 'core/util';
+import { arghelp, rpad } from 'core/util';
 import { CommandAction, CommandArgument } from './types';
 import registry from './registry';
 import { flat } from 'core/util/array';
@@ -349,6 +349,12 @@ export default class Command {
             : this.keywords;
     }
 
+    public get commandNameForVerboseHelp(): string {
+        return this.parent
+            ? `${this.parent.commandNameForVerboseHelp} ${this.keywords}`
+            : this.keywords;
+    }
+
     /**
      * Get the help text for this command and all sub
      * commands.
@@ -364,6 +370,45 @@ export default class Command {
                 .filter(Boolean)
                 .join(' '),
             ...flat(Object.values(this.subcommands).map(sub => sub.help)),
+        ];
+    }
+
+    public get kwargDescriptions(): string[] {
+        const kwargFlags = this.kwargFlags.slice(1);
+
+        const maxKwLen = (defs: KwargDefinition[]) =>
+            defs.reduce((max, def) => Math.max(def.key[0].length + 5, max), 5);
+
+        return [
+            ...(this.kwargKeywords.length > 0 ? ['Keyword arguments'] : []),
+            ...this.kwargKeywords.map(
+                kw =>
+                    `${rpad(
+                        `-${kw.key[1]}|--${kw.key[0]}`,
+                        maxKwLen(this.kwargKeywords) + 1
+                    )} - ${kw.description}`
+            ),
+            ...(kwargFlags.length > 0 ? ['Flags'] : []),
+            ...kwargFlags.map(
+                kw =>
+                    `${rpad(
+                        `-${kw.key[1]}|--${kw.key[0]}`,
+                        maxKwLen(kwargFlags) + 1
+                    )} - ${kw.description}`
+            ),
+        ];
+    }
+
+    public get verboseHelp(): string[] {
+        return [
+            `${this.commandNameForVerboseHelp} [kwargs?] ${this.arguments
+                .map(arghelp)
+                .join(' ')}\n${this.description}\n${this.kwargDescriptions.join(
+                '\n'
+            )}`,
+            ...flat(
+                Object.values(this.subcommands).map(sub => sub.verboseHelp)
+            ),
         ];
     }
 }

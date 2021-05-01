@@ -20,8 +20,10 @@ import 'modules/simpsons';
 import 'modules/stonks';
 import TriviaController from 'modules/trivia';
 import HelpController from 'modules/help';
+import Gpt3Controller from 'modules/gpt3';
 import { register } from 'core';
 
 register(JokesController);
 register(TriviaController);
 register(HelpController);
+register(Gpt3Controller);
