@@ -44,6 +44,14 @@ export default class Command {
     public description: string;
 
     /**
+     * Group description
+     *
+     * Provides extra information about the group of commands
+     * that is displayed above the command help
+     */
+    public groupDescription: string;
+
+    /**
      * Arguments to show in help text.
      *
      * These are not validated and defaults aren't
@@ -152,6 +160,14 @@ export default class Command {
      */
     public desc(description: string) {
         return this.set({ description });
+    }
+
+    /**
+     * Set the group description of the command.
+     * Only valid for group/module commands
+     */
+    public gdesc(groupDescription: string) {
+        return this.set({ groupDescription });
     }
 
     /**
@@ -309,7 +325,7 @@ export default class Command {
      * a pipe `|`).
      */
     public get keywords(): string {
-        return [this.commandName, ...this.aliases].join('|');
+        return [this.keyword, ...this.aliases].join('|');
     }
 
     /**
@@ -322,13 +338,15 @@ export default class Command {
             : this.keyword;
     }
 
+    public get parents(): number {
+        if (!this.parent) return 0;
+        return this.parent.parents + 1;
+    }
+
     public get commandNameForHelp(): string {
         return this.parent
-            ? `${this.parent.commandNameForHelp}${this.keyword}`.replace(
-                  this.parent.keyword,
-                  '\t'
-              )
-            : this.commandName;
+            ? '\t'.repeat(this.parents) + this.keywords
+            : this.keywords;
     }
 
     /**
@@ -348,25 +366,6 @@ export default class Command {
             ]
                 .filter(Boolean)
                 .join(' '),
-            ...flat(Object.values(this.subcommands).map(sub => sub.help)),
-        ];
-    }
-
-    /**
-     * Get the help text for this command and all sub
-     * commands, including aliases
-     *
-     * Returns an empty array if the command is hidden.
-     */
-    public get helpWithAliases(): string[] {
-        if (this.hidden) return [];
-        return [
-            [
-                this.keywords,
-                ...this.arguments.map(arghelp),
-                this.description && '-',
-                this.description,
-            ].join(' '),
             ...flat(Object.values(this.subcommands).map(sub => sub.help)),
         ];
     }

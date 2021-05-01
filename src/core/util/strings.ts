@@ -1,3 +1,5 @@
+import { randint } from './random';
+
 /**
  * Wrap a string in backticks.
  */
@@ -25,3 +27,15 @@ export const numberEmoji = (n: number) =>
     ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'][
         n - 1
     ] ?? 'x';
+
+export const rpad = (text: string, width: number, char: string = ' ') =>
+    `${text}${char.repeat(width - text.length)}`;
+
+export const lpad = (text: string, width: number, char: string = ' ') =>
+    `${char.repeat(width - text.length)}${text}`;
+
+export const mock = (text: string) =>
+    text
+        .split('')
+        .map(c => (randint(2) ? c.toUpperCase() : c.toLowerCase()))
+        .join('');

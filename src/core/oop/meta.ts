@@ -5,6 +5,7 @@ const keys = {
     GROUP_BEFORE: 'bot:group_before',
     GROUP_AFTER: 'bot:group_after',
     GROUP_DELEGATES: 'bot:group_delegates',
+    GROUP_DESCRIPTION: 'bot:group_description',
 
     MAIN_COMMAND_METHOD: 'bot:main_command_method',
     SUB_COMMANDS: 'bot:sub_commands',

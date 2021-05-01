@@ -18,7 +18,13 @@ import TriviaService from './trivia.service';
 import TriviaCategoriesController from './categories.controller';
 import Kwargs from 'core/model/kwargs';
 
-@group('trivia')
+@group('trivia', [
+    '*Trivia* - how to play',
+    "Start a new game a trivia using the `trivia` command. I'll then ask a question in the channel, and give the answer options.",
+    "To answer, type in the full text of the option (excluding the number). I'll let you know via an emoji or message whether you've got it right.",
+    "Once a player answers correctly, the game will end and they'll receive a point.",
+    "You can check players' scores using the `trivia leaderboard` command.",
+])
 @delegate(TriviaCategoriesController)
 export default class TriviaController extends Controller {
     @before

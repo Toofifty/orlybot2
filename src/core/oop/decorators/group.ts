@@ -6,9 +6,19 @@ import { Constructable } from '../di/container';
  * If you'd still like to run an action on this command, use a
  * method decorated with `@maincmd`.
  */
-export const group = (name: string): ClassDecorator => {
+export const group = (
+    name: string,
+    groupDescription?: string | string[]
+): ClassDecorator => {
     return target => {
         Meta.set(Meta.COMMAND_GROUP, name, target.prototype);
+        Meta.set(
+            Meta.GROUP_DESCRIPTION,
+            Array.isArray(groupDescription)
+                ? groupDescription.join('\n')
+                : groupDescription,
+            target.prototype
+        );
     };
 };
 

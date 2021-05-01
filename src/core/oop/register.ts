@@ -9,6 +9,6 @@ export const register = async <T extends Controller>(
 ) => {
     (await adapt(controller)).forEach(cmd => {
         registry.register(cmd);
-        loginfo(cmd.helpWithAliases);
+        loginfo(cmd.help);
     });
 };
