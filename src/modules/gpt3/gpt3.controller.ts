@@ -10,10 +10,13 @@ import {
     cmd,
     aliases,
     validate,
+    kwargs,
 } from 'core';
 import Gpt3Store from './gpt3.store';
 import Gpt3Service from './gpt3.service';
 import Gpt3Validator from './gpt3.validator';
+import { pre } from 'core/util';
+import { parameterKwargs } from './kwargs';
 
 @group('gpt3', [
     '*GPT-3* - deep learning text completion',
@@ -43,42 +46,40 @@ import Gpt3Validator from './gpt3.validator';
 ])
 export default class Gpt3Controller extends Controller {
     @before
-    before(message: Message) {
-        message.addReaction('thinking_face');
+    async before(message: Message) {
+        await message.addReaction('thinking_face');
     }
 
     @after
-    after(message: Message) {
-        message.removeReaction('thinking_face');
+    async after(message: Message) {
+        await message.removeReaction('thinking_face');
     }
 
     @maincmd('Talk to GPT-3!')
     @aliases('g')
-    @kwarg(
-        ['stop', 's'],
-        'Text to look for to end the response. Default ["\\n", "Human:", "AI:"]'
-    )
-    @kwarg(
-        ['presence_penalty', 'p'],
-        'Penalise words already used to prevent them from appearing again. Default 0.8'
-    )
-    @kwarg(
-        ['frequency_penalty', 'f'],
-        'Penalise frequently used words/phrases. Default 0.9'
-    )
-    @kwarg(['top_p', 'P'], ':shrug: Default 1')
-    @kwarg(
-        ['max_tokens', 'm'],
-        'Max amount of tokens in the prompt + response. Do not set this too high. Default 50'
-    )
-    @kwarg(['temperature', 't'], 'How varied the completions are. Default 0.9')
+    @kwargs(...parameterKwargs)
     @validate(Gpt3Validator, 'validParameters')
-    chat(message: Message, kwargs: Kwargs, ...text: string[]) {
-        console.log(kwargs);
+    async chat(message: Message, service: Gpt3Service, ...text: string[]) {
+        message.reply(await service.fetchReply(text.join(' ')));
     }
 
-    @cmd('log', 'Print out the chat log')
-    log(message: Message) {
-        console.log('woo');
+    @cmd('log', 'Print out the discussion log')
+    log(message: Message, store: Gpt3Store) {
+        message.reply(pre(store.discussion.join('\n')));
+    }
+
+    @cmd('undo', 'Undo the last message and response in the discussion')
+    undo(message: Message, store: Gpt3Store) {
+        store.discussion.pop();
+        store.discussion.pop();
+        store.save();
+        message.addReaction('white_check_mark');
+    }
+
+    @cmd('reset', 'Reset the discussion')
+    reset(message: Message, store: Gpt3Store) {
+        store.discussion = store.initial.discussion;
+        store.save();
+        message.addReaction('white_check_mark');
     }
 }

@@ -1,4 +1,4 @@
-const DEFAULT_PARAMETERS = {
+export const DEFAULT_PARAMETERS = {
     temperature: 0.9,
     max_tokens: 50,
     top_p: 1,
@@ -7,7 +7,7 @@ const DEFAULT_PARAMETERS = {
     stop: ['\n', 'Human:', 'AI:'],
 };
 
-const OPENAI_COMPLETIONS =
+export const OPENAI_COMPLETIONS =
     'https://api.openai.com/v1/engines/davinci/completions';
 
-const PROMPT_LENGTH = 6;
+export const PROMPT_LENGTH = 6;

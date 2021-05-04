@@ -1,6 +1,6 @@
 import { Meta } from '../meta';
 import { CommandArgument } from 'core/commands';
-import { Match } from 'core/model/kwargs';
+import { KwargDefinition, Match } from 'core/model/kwargs';
 
 const getArguments = (func: any): CommandArgument[] =>
     func
@@ -130,6 +130,14 @@ export const kwarg = (key: Match, description: string): MethodDecorator => {
             { key, description },
             target
         );
+    };
+};
+
+export const kwargs = (...kwargs: KwargDefinition[]): MethodDecorator => {
+    return (target, property) => {
+        kwargs.forEach(kwarg => {
+            Meta.push(Meta.prop(Meta.COMMAND_KWARGS, property), kwarg, target);
+        });
     };
 };
 

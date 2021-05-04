@@ -26,4 +26,7 @@ import { register } from 'core';
 register(JokesController);
 register(TriviaController);
 register(HelpController);
-register(Gpt3Controller);
+
+if (process.env.OPENAI_API_KEY) {
+    register(Gpt3Controller);
+}
