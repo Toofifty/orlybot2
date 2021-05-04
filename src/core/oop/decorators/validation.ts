@@ -22,6 +22,15 @@ export const validate = <T extends Object>(
                 target
             );
         } else {
+            Meta.push(
+                Meta.prop(Meta.COMMAND_VALIDATION, property),
+                validators.map(v => ({
+                    property: v,
+                    target: validatorClass,
+                    index,
+                })),
+                target
+            );
         }
     };
 };

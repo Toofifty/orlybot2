@@ -1,9 +1,9 @@
 import { Command, CommandArgument, UserError } from 'core/commands';
+import { KwargDefinition } from 'core/model/kwargs';
 import Container, { Constructable } from './di/container';
 import { Controller } from './controller';
 import { Meta, MetaKey } from './meta';
-import { StoredValidator, Validator } from './types';
-import { KwargDefinition } from 'core/model/kwargs';
+import { StoredValidator, ArgumentValidator, CommandValidator } from './types';
 
 const getMetaFactory = (target: Object, property?: string) => <T>(
     key: MetaKey
@@ -87,18 +87,42 @@ const createCommand = (cls: Controller, method: string, isGroup = false) => {
 
 const createAction = (cls: Controller, method: string) => {
     const cmeta = getMetaFactory(cls);
-    const meta = getMetaFactory(cls, method);
 
     const beforeFn = cmeta<string>(Meta.GROUP_BEFORE);
     const afterFn = cmeta<string>(Meta.GROUP_AFTER);
 
     return async (_: any, args: string[]) => {
         await runArgValidators(cls, method, args);
+        await runCommandValidators(cls, method, args);
 
         if (beforeFn) await Container.execute(cls, beforeFn);
         await Container.execute(cls, method, args);
         if (afterFn) await Container.execute(cls, afterFn);
     };
+};
+
+const runCommandValidators = async (
+    cls: Controller,
+    method: string,
+    args: string[]
+) => {
+    const meta = getMetaFactory(cls, method);
+
+    const validatorPromises = (
+        meta<StoredValidator[]>(Meta.COMMAND_VALIDATION) ?? []
+    ).map(
+        async ({ target, property }) =>
+            (await Container.execute(target, property)) as CommandValidator
+    );
+
+    const validators = await Promise.all(validatorPromises);
+
+    for (let validator of validators) {
+        const result = await validator({ args });
+        if (result !== true) {
+            throw new UserError(result);
+        }
+    }
 };
 
 const runArgValidators = async (
@@ -116,7 +140,10 @@ const runArgValidators = async (
         .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
         .map(async ({ index, target, property }) => ({
             index: index! - argStart,
-            validator: (await Container.execute(target, property)) as Validator,
+            validator: (await Container.execute(
+                target,
+                property
+            )) as ArgumentValidator,
         }));
 
     const validators = await Promise.all(validatorPromises);

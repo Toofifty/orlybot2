@@ -1,10 +1,14 @@
-export type Validator = (
+export type ValidatorContext = { args: string[] };
+
+export type ArgumentValidator = (
     arg: string,
     index: number,
-    ctx: { args: string[] }
+    ctx: ValidatorContext
 ) => true | string | Promise<true | string>;
 
-export type InjectableValidator = (...args: any[]) => Validator;
+export type CommandValidator = (
+    ctx: ValidatorContext
+) => true | string | Promise<true | string>;
 
 export type StoredValidator = {
     index?: number;

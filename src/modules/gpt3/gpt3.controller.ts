@@ -9,6 +9,7 @@ import {
     Kwargs,
     cmd,
     aliases,
+    validate,
 } from 'core';
 import Gpt3Store from './gpt3.store';
 import Gpt3Service from './gpt3.service';
@@ -71,6 +72,7 @@ export default class Gpt3Controller extends Controller {
         'Max amount of tokens in the prompt + response. Do not set this too high. Default 50'
     )
     @kwarg(['temperature', 't'], 'How varied the completions are. Default 0.9')
+    @validate(Gpt3Validator, 'validParameters')
     chat(message: Message, kwargs: Kwargs, ...text: string[]) {
         console.log(kwargs);
     }

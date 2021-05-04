@@ -1,11 +1,11 @@
 import { injectable } from 'core';
-import { Validator } from 'core/oop/types';
+import { ArgumentValidator } from 'core/oop/types';
 import TriviaStore from './trivia.store';
 import TriviaService from './trivia.service';
 
 export default class TriviaValidator {
     @injectable()
-    validDifficulty(): Validator {
+    validDifficulty(): ArgumentValidator {
         return async difficulty =>
             !difficulty ||
             ['hard', 'medium', 'easy'].includes(difficulty) ||
@@ -18,13 +18,16 @@ export default class TriviaValidator {
     }
 
     @injectable()
-    validCategory(service: TriviaService): Validator {
+    validCategory(service: TriviaService): ArgumentValidator {
         return async category =>
             !!(await service.fetchCategory(category)) || 'Unknown category';
     }
 
     @injectable()
-    categoryIsEnabled(service: TriviaService, store: TriviaStore): Validator {
+    categoryIsEnabled(
+        service: TriviaService,
+        store: TriviaStore
+    ): ArgumentValidator {
         return async category =>
             store.enabledCategories.includes(
                 (await service.fetchCategory(category))?.id ?? -1
@@ -32,7 +35,10 @@ export default class TriviaValidator {
     }
 
     @injectable()
-    categoryIsDisabled(service: TriviaService, store: TriviaStore): Validator {
+    categoryIsDisabled(
+        service: TriviaService,
+        store: TriviaStore
+    ): ArgumentValidator {
         return async category =>
             !store.enabledCategories.includes(
                 (await service.fetchCategory(category))?.id ?? -1
