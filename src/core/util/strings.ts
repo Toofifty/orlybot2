@@ -1,3 +1,4 @@
+import { chunk } from './array';
 import { randint } from './random';
 
 /**
@@ -44,3 +45,12 @@ export const mock = (text: string) =>
         .split('')
         .map(c => (randint(2) ? c.toUpperCase() : c.toLowerCase()))
         .join('');
+
+export const columnise = (list: string[], columns = 3, padding = 4) => {
+    const columnWidth =
+        list.reduce((max, kw) => Math.max(max, kw.length), 0) + padding;
+
+    return chunk(list, columns)
+        .map(chunk => chunk.map(kw => rpad(kw, columnWidth)).join(''))
+        .join('\n');
+};

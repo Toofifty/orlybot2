@@ -3,20 +3,23 @@ import {
     before,
     Controller,
     group,
-    kwarg,
     maincmd,
     Message,
-    Kwargs,
     cmd,
     aliases,
     validate,
     kwargs,
+    delegate,
+    Kwargs,
+    flag,
 } from 'core';
+import { pre } from 'core/util';
 import Gpt3Store from './gpt3.store';
 import Gpt3Service from './gpt3.service';
 import Gpt3Validator from './gpt3.validator';
-import { pre } from 'core/util';
+import Gpt3PromptController from './prompt.controller';
 import { parameterKwargs } from './kwargs';
+import Gpt3PromptService from './prompt.service';
 
 @group('gpt3', [
     '*GPT-3* - deep learning text completion',
@@ -33,17 +36,18 @@ import { parameterKwargs } from './kwargs';
     '*Changing parameters (advanced)*',
     '> You can change the parameters sent in the request using keyword arguments in your command.',
     '> For example; `g --temperature 0.2 How was your day today?`',
-    '> Valid parameters include: `--temperature|-t [0 to 1]`, `--max_tokens|-m int`, `--top_p|-P [0 to 1]`, `--frequency_penalty|-f [0 to 1]`, `--presence_penalty|-p [0 to 1]`, and `--stop|-s "string1 string2"`.',
+    '> Use `help gpt3 -v` to see all valid parameters.',
     '> Custom parameters will only apply for the current completion.',
     '',
     '*Saving prompts (advanced)*',
     '> You can also save custom prompts to be re-used later in the `gpt3 complete` command.',
-    '> To save a prompt, use the `gpt3 save` command (usage below).',
+    '> To save a prompt, use the `gpt3 prompt save` command (usage below).',
     '> To use a prompt in a completion, pass it as a keyword argument with `--prompt|-Q [name of prompt]`. By default, the rest of the text in the command will be appended to the prompt before it is sent.',
-    '> You can instead inject the text into the prompt, by adding placeholders $1, $2, $3 and so on into the prompt. Use $@ to inject the entire text.',
-    '> e.g. `gpt3 save test_prompt There was once a knight named $1, who lived in $2. He` -> `gpt3 complete -Q test_prompt "Sir Vyvin" "Falador castle"`',
-    '> Request parameters provided in the `gpt3 save` command will also always be applied to completions.',
+    '> You can instead inject the text into the prompt, by adding placeholders $0, $1, $2 and so on into the prompt. Use $@ to inject the entire text.',
+    '> e.g. `gpt3 prompt save test_prompt There was once a knight named $0, who lived in $1. He` -> `gpt3 complete -Q test_prompt "Sir Vyvin" "Falador castle"`',
+    '> Request parameters provided in the `gpt3 prompt save` command will also always be applied to completions.',
 ])
+@delegate(Gpt3PromptController)
 export default class Gpt3Controller extends Controller {
     @before
     async before(message: Message) {
@@ -81,5 +85,47 @@ export default class Gpt3Controller extends Controller {
         store.discussion = store.initial.discussion;
         store.save();
         message.addReaction('white_check_mark');
+    }
+
+    @cmd('complete', 'Use GPT-3 to complete a prompt')
+    @aliases('c')
+    @kwargs(...parameterKwargs, {
+        key: ['prompt', 'Q'],
+        description: 'Name of prompt template',
+    })
+    @flag(['dry-run', 'd'], "Do a dry run (don't send to the API)")
+    @validate(Gpt3Validator, 'validParameters')
+    async complete(
+        message: Message,
+        kwargs: Kwargs,
+        promptService: Gpt3PromptService,
+        service: Gpt3Service,
+        ...prompt: string[]
+    ) {
+        const savedPromptName = kwargs.get('prompt');
+
+        if (savedPromptName) {
+            const {
+                prompt: preparedPrompt,
+                parameters,
+            } = await promptService.prepare(savedPromptName, prompt);
+
+            if (kwargs.has('dry-run')) {
+                return message.replyEphemeral(
+                    `Would've sent this prompt:\n${pre(preparedPrompt)}`
+                );
+            }
+
+            const completion = await service.fetchCompletion(
+                preparedPrompt,
+                parameters
+            );
+            return message.reply([`> ${prompt}`, completion]);
+        }
+
+        if (kwargs.has('dry-run')) return;
+
+        const completion = await service.fetchCompletion(prompt.join(' '));
+        return message.reply([`> ${prompt.join(' ')}`, completion]);
     }
 }

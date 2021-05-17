@@ -128,7 +128,7 @@ export default class TriviaService {
                     100
                 ).toFixed(0),
             }))
-            .sort((a, b) => (a.score < b.score ? 1 : 0));
+            .sort((a, b) => a.score - b.score);
     }
 
     private async onCorrect(store: TriviaStore, message: Message) {

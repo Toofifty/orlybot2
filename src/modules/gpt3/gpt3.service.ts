@@ -14,11 +14,12 @@ type CompletionResponse = {
 
 @injectable()
 export default class Gpt3Service {
-    constructor(private kwargs: Kwargs, private store: Gpt3Store) {
-        console.log('resolved', kwargs, store);
-    }
+    constructor(private kwargs: Kwargs, private store: Gpt3Store) {}
 
-    async fetchCompletion(prompt: string) {
+    async fetchCompletion(
+        prompt: string,
+        parameters?: typeof DEFAULT_PARAMETERS
+    ) {
         const res: CompletionResponse = await fetch(OPENAI_COMPLETIONS, {
             method: 'post',
             headers: {
@@ -26,7 +27,7 @@ export default class Gpt3Service {
                 Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
             },
             body: JSON.stringify({
-                ...this.getParameters(),
+                ...(parameters ?? this.getParameters()),
                 prompt,
             }),
         }).then(res => res.json());

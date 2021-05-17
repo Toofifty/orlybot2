@@ -4,7 +4,9 @@ import { CommandAction, CommandArgument } from './types';
 import registry from './registry';
 import { flat } from 'core/util/array';
 import { loginfo } from 'core/log';
-import { KwargDefinition, Match } from 'core/model/kwargs';
+import Kwargs, { KwargDefinition, Match } from 'core/model/kwargs';
+import Container from 'core/oop/di/container';
+import CommandRunner from './runner';
 
 enum CommandPermission {
     USER = 0,
@@ -304,6 +306,16 @@ export default class Command {
         ) {
             message.replyEphemeral('No');
             return;
+        }
+
+        const kwargs = message.parseKwargs(
+            this.kwargKeywords.map(({ key }) => key),
+            this.kwargFlags.map(({ key }) => key)
+        );
+        Container.singleton(Kwargs, kwargs);
+
+        if (kwargs.has('help')) {
+            return await CommandRunner.run(`help ${this.keyword}`, message);
         }
 
         const result = await this.action(

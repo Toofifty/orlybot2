@@ -6,8 +6,6 @@ export type KwargDefinition = { key: Match; description: string };
 
 /**
  * Contains bash-like keyword arguments used in the command.
- *
- *
  */
 export default class Kwargs {
     constructor(
@@ -37,6 +35,7 @@ export default class Kwargs {
                 if (flag) {
                     kwflags.push(flag[0]);
                     tokens.splice(idx, 1);
+                    idx--;
                     continue;
                 }
 
@@ -46,10 +45,16 @@ export default class Kwargs {
                         kwargs[keyword[0]] = tokens[idx + 1];
                     }
                     tokens.splice(idx, 2);
+                    idx--;
                     continue;
                 }
 
-                throw new UserError(`Unrecognised argument: ${key}`);
+                throw new UserError(
+                    `Unrecognised argument: ${key}. Valid arguments are: ${[
+                        ...flags,
+                        ...keywords,
+                    ].join(', ')}`
+                );
             } else if (token.startsWith('-')) {
                 const shortKeys = token.substring(1).split('');
 
@@ -67,6 +72,7 @@ export default class Kwargs {
                         if (idx < tokens.length) {
                             kwargs[keyword[0]] = tokens[idx + 1];
                             tokens.splice(idx + 1, 1);
+                            idx--;
                         }
                         continue;
                     }
@@ -93,6 +99,13 @@ export default class Kwargs {
      */
     public get(key: string) {
         return this.args[key];
+    }
+
+    public getMany<T extends string>(...keys: T[]) {
+        return keys.reduce(
+            (prev, key) => ({ ...prev, [key]: this.get(key) }),
+            {} as Record<T, string>
+        );
     }
 
     /**
