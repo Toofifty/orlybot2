@@ -21,6 +21,7 @@ import 'modules/stonks';
 import TriviaController from 'modules/trivia';
 import HelpController from 'modules/help';
 import Gpt3Controller from 'modules/gpt3';
+import ScrabbleController from 'modules/scrabble';
 import { register } from 'core';
 
 register(JokesController);
@@ -30,3 +31,4 @@ register(HelpController);
 if (process.env.OPENAI_API_KEY) {
     register(Gpt3Controller);
 }
+register(ScrabbleController);

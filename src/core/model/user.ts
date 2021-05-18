@@ -5,6 +5,7 @@ import { ID } from 'core/model/types';
 import DbModel from 'core/model/db-model';
 import db from 'core/db';
 import { loginfo } from 'core/log';
+import { Channel } from '.';
 
 const USER_TAG_REGEX = /<@(\w{9})(?:\|\w+)?>*/;
 
@@ -150,9 +151,9 @@ export default class User extends DbModel {
     /**
      * Send a direct ephemeral message to the user.
      */
-    public ephemeral(text: string) {
+    public ephemeral(text: string, channel?: Channel) {
         return bot._ephemeral({
-            channel: this.id,
+            channel: channel?.id ?? this.id,
             user: this.id,
             as_user: true,
             text,
