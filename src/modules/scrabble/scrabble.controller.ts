@@ -3,7 +3,9 @@ import {
     aliases,
     before,
     cmd,
+    CommandRunner,
     Controller,
+    delegate,
     group,
     maincmd,
     Message,
@@ -12,9 +14,11 @@ import {
 } from 'core';
 import ScrabbleValidator from './scrabble.validator';
 import ScrabbleService from './scrabble.service';
+import { ScrabblePlacementController } from './placement';
 import { MAX_PLAYERS } from './engine/consts';
 
 @group('scrabble')
+@delegate(ScrabblePlacementController)
 export default class ScrabbleController extends Controller {
     @before
     async before(message: Message) {
@@ -28,8 +32,8 @@ export default class ScrabbleController extends Controller {
 
     @maincmd('Alias for "scrabble place"')
     @aliases('scr')
-    async index(xyd: string, letters: string) {
-        return this.place(xyd, letters);
+    async index(message: Message, xyd: string, letters: string) {
+        return CommandRunner.run(`scrabble place ${xyd} ${letters}`, message);
     }
 
     @cmd('join', 'Join the scrabble game! Autostarts at 4 players')
@@ -55,14 +59,10 @@ export default class ScrabbleController extends Controller {
         service.beginGame(message);
     }
 
-    @cmd('place', 'Place letter tiles on the board')
-    @validate(ScrabbleValidator, 'gameIsInProgress', 'userIsInGame')
-    async place(xyd: string, letters: string) {}
-
     @cmd('print', 'Print the current Scrabble game')
     @validate(ScrabbleValidator, 'gameIsInProgress')
     async print(message: Message, service: ScrabbleService) {
-        await service.print(message);
+        await service.print(message, true);
     }
 
     @cmd('rack', 'Print the current Scrabble game')

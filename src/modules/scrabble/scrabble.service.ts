@@ -1,10 +1,17 @@
-import { BotMessage, Channel, injectable, Message, User } from 'core';
+import {
+    BotMessage,
+    Channel,
+    CommandRunner,
+    injectable,
+    Message,
+    User,
+} from 'core';
 import { assert, choose, mention, shuffle } from 'core/util';
 import { ALL_TILES, BOARD_SIZE, PREMIUM_SQUARES } from './engine/consts';
 import { renderGame, renderPlayerScore, renderRack } from './engine/render';
 import ScrabbleStore from './scrabble.store';
 import { isGameInitialised } from './typeguards';
-import { ScrabbleBoard } from './types';
+import { ScrabbleBoard, TurnRecord } from './types';
 
 @injectable()
 export default class ScrabbleService {
@@ -76,6 +83,64 @@ export default class ScrabbleService {
     }
 
     /**
+     * Move currentTurn to the next player
+     */
+    async startNextTurn() {
+        assert(isGameInitialised(this.store));
+
+        const playerIds = Object.keys(this.store.players);
+        this.store.currentTurn =
+            playerIds[
+                (playerIds.indexOf(this.store.currentTurn) +
+                    1 +
+                    playerIds.length) %
+                    playerIds.length
+            ];
+
+        await this.store.save();
+    }
+
+    /**
+     * Move currentTurn to the next player without scoring
+     */
+    async skipTurn(message: Message) {
+        await this.startNextTurn();
+        await message.reply(
+            `Turn skipped - you\'re up ${mention(this.store.currentTurn!)}`
+        );
+    }
+
+    /**
+     * Save player score and records after a turn is complete,
+     * and move to the next turn
+     */
+    async finishTurn(message: Message, turn: TurnRecord, letters: string) {
+        assert(isGameInitialised(this.store));
+
+        const score = turn.words.reduce(
+            (total, wordScore) => total + wordScore.score,
+            0
+        );
+
+        const player = this.store.players[message.user.id];
+        player.records = [...player.records, turn];
+        player.score = player.score + score;
+        player.rack = this.removeFromRack(player.rack, letters);
+        await this.store.save();
+
+        await this.print(message);
+        await this.startNextTurn();
+        await message.reply(
+            `Nice! ${score} points. You're next, ${mention(
+                this.store.currentTurn!
+            )}!`
+        );
+
+        await this.portionTiles();
+        await this.printTileRack(message);
+    }
+
+    /**
      * Print the game information and board
      *
      * If there's already an active game message, just edit it.
@@ -94,10 +159,12 @@ export default class ScrabbleService {
         if (this.store.gameMessage) {
             const msg = await BotMessage.from(this.store.gameMessage);
             await msg.edit(renderGame(this.store));
+            console.log('edit::', renderGame(this.store));
 
             for (const player of Object.values(this.store.players)) {
                 const playerMsg = await BotMessage.from(player.message);
                 await playerMsg.edit(renderPlayerScore(player));
+                console.log(renderPlayerScore(player));
             }
 
             return;
@@ -112,7 +179,7 @@ export default class ScrabbleService {
         }
 
         this.store.gameMessage = msg.serialize();
-        this.store.save();
+        await this.store.save();
     }
 
     /**
@@ -165,6 +232,14 @@ export default class ScrabbleService {
             }
         }
         await this.store.save();
+    }
+
+    private removeFromRack(rack: string[], letters: string) {
+        letters
+            .toUpperCase()
+            .split('')
+            .forEach(letter => rack.splice(rack.indexOf(letter), 1));
+        return rack;
     }
 
     private createBoard(): ScrabbleBoard {
