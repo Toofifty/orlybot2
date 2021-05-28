@@ -1,3 +1,6 @@
+import { chunk } from './array';
+import { randint } from './random';
+
 /**
  * Wrap a string in backticks.
  */
@@ -25,3 +28,29 @@ export const numberEmoji = (n: number) =>
     ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'][
         n - 1
     ] ?? 'x';
+
+export const rpad = (text: string, width: number, char: string = ' ') => {
+    try {
+        return `${text}${char.repeat(width - text.length)}`;
+    } catch {
+        console.log(text, width, char);
+    }
+};
+
+export const lpad = (text: string, width: number, char: string = ' ') =>
+    `${char.repeat(width - text.length)}${text}`;
+
+export const mock = (text: string) =>
+    text
+        .split('')
+        .map(c => (randint(2) ? c.toUpperCase() : c.toLowerCase()))
+        .join('');
+
+export const columnise = (list: string[], columns = 3, padding = 4) => {
+    const columnWidth =
+        list.reduce((max, kw) => Math.max(max, kw.length), 0) + padding;
+
+    return chunk(list, columns)
+        .map(chunk => chunk.map(kw => rpad(kw, columnWidth)).join(''))
+        .join('\n');
+};

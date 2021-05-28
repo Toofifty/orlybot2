@@ -1,9 +1,12 @@
 import Message from 'core/model/message';
-import { arghelp } from 'core/util';
+import { arghelp, rpad } from 'core/util';
 import { CommandAction, CommandArgument } from './types';
 import registry from './registry';
 import { flat } from 'core/util/array';
 import { loginfo } from 'core/log';
+import Kwargs, { KwargDefinition, Match } from 'core/model/kwargs';
+import Container from 'core/oop/di/container';
+import CommandRunner from './runner';
 
 enum CommandPermission {
     USER = 0,
@@ -11,6 +14,8 @@ enum CommandPermission {
 }
 
 /**
+ * @deprecated Use the OOP controllers instead
+ *
  * Command class and namespace.
  *
  * You probably want to use `Command.create(...)`.
@@ -39,6 +44,14 @@ export default class Command {
      * Description to show in help text.
      */
     public description: string;
+
+    /**
+     * Group description
+     *
+     * Provides extra information about the group of commands
+     * that is displayed above the command help
+     */
+    public groupDescription: string;
 
     /**
      * Arguments to show in help text.
@@ -87,7 +100,14 @@ export default class Command {
      */
     public hidden?: boolean;
 
+    public kwargKeywords: KwargDefinition[] = [];
+    public kwargFlags: KwargDefinition[] = [
+        { key: ['help', 'h'], description: 'Get help about this command.' },
+    ];
+
     /**
+     * @deprecated Use the OOP controllers instead
+     *
      * Create and register a new command. The resulting object
      * can be chained to set properties.
      *
@@ -145,6 +165,14 @@ export default class Command {
     }
 
     /**
+     * Set the group description of the command.
+     * Only valid for group/module commands
+     */
+    public gdesc(groupDescription: string) {
+        return this.set({ groupDescription });
+    }
+
+    /**
      * Add a help text argument for the command.
      */
     public arg(argument: Partial<CommandArgument>) {
@@ -157,6 +185,17 @@ export default class Command {
      */
     public admin() {
         return this.set({ permission: CommandPermission.ADMIN });
+    }
+
+    /**
+     * Make the command admin-only.
+     */
+    public isAdmin(admin = true) {
+        return this.set({
+            permission: admin
+                ? CommandPermission.ADMIN
+                : CommandPermission.USER,
+        });
     }
 
     /**
@@ -206,6 +245,23 @@ export default class Command {
     }
 
     /**
+     * Hide the command from help text.
+     */
+    public isHidden(hidden: boolean = true) {
+        return this.hide(hidden);
+    }
+
+    public kwarg(key: Match, description: string) {
+        this.kwargKeywords.push({ key, description });
+        return this;
+    }
+
+    public flag(key: Match, description: string) {
+        this.kwargFlags.push({ key, description });
+        return this;
+    }
+
+    /**
      * Check if this command matches the message's
      * terms on the second pass. Only executed if no
      * command matches the first pass (key lookup).
@@ -252,6 +308,16 @@ export default class Command {
             return;
         }
 
+        const kwargs = message.parseKwargs(
+            this.kwargKeywords.map(({ key }) => key),
+            this.kwargFlags.map(({ key }) => key)
+        );
+        Container.singleton(Kwargs, kwargs);
+
+        if (kwargs.has('help')) {
+            return await CommandRunner.run(`help ${this.keyword}`, message);
+        }
+
         const result = await this.action(
             message,
             message.tokens.slice(step + 1)
@@ -271,7 +337,7 @@ export default class Command {
      * a pipe `|`).
      */
     public get keywords(): string {
-        return [this.commandName, ...this.aliases].join('|');
+        return [this.keyword, ...this.aliases].join('|');
     }
 
     /**
@@ -284,43 +350,77 @@ export default class Command {
             : this.keyword;
     }
 
-    /**
-     * Get the help text for this command and all sub
-     * commands.
-     *
-     * Returns an empty array if the command is hidden.
-     */
-    public get help(): string[] {
-        if (this.hidden) return [];
-        return [
-            [
-                this.parent
-                    ? this.commandName.replace(this.parent.commandName, '\t')
-                    : this.commandName,
-                ...this.arguments.map(arghelp),
-                '-',
-                this.description,
-            ].join(' '),
-            ...flat(Object.values(this.subcommands).map(sub => sub.help)),
-        ];
+    public get parents(): number {
+        if (!this.parent) return 0;
+        return this.parent.parents + 1;
+    }
+
+    public get commandNameForHelp(): string {
+        return this.parent
+            ? '\t'.repeat(this.parents) + this.keywords
+            : this.keywords;
+    }
+
+    public get commandNameForVerboseHelp(): string {
+        return this.parent
+            ? `${this.parent.commandNameForVerboseHelp} ${this.keywords}`
+            : this.keywords;
     }
 
     /**
      * Get the help text for this command and all sub
-     * commands, including aliases
-     *
-     * Returns an empty array if the command is hidden.
+     * commands.
      */
-    public get helpWithAliases(): string[] {
-        if (this.hidden) return [];
+    public get help(): string[] {
         return [
             [
-                this.keywords,
+                this.commandNameForHelp,
                 ...this.arguments.map(arghelp),
-                '-',
+                this.description && '-',
                 this.description,
-            ].join(' '),
+            ]
+                .filter(Boolean)
+                .join(' '),
             ...flat(Object.values(this.subcommands).map(sub => sub.help)),
+        ];
+    }
+
+    public get kwargDescriptions(): string[] {
+        const kwargFlags = this.kwargFlags.slice(1);
+
+        const maxKwLen = (defs: KwargDefinition[]) =>
+            defs.reduce((max, def) => Math.max(def.key[0].length + 5, max), 5);
+
+        return [
+            ...(this.kwargKeywords.length > 0 ? ['Keyword arguments'] : []),
+            ...this.kwargKeywords.map(
+                kw =>
+                    `${rpad(
+                        `-${kw.key[1]}|--${kw.key[0]}`,
+                        maxKwLen(this.kwargKeywords) + 1
+                    )} - ${kw.description}`
+            ),
+            ...(kwargFlags.length > 0 ? ['Flags'] : []),
+            ...kwargFlags.map(
+                kw =>
+                    `${rpad(
+                        `-${kw.key[1]}|--${kw.key[0]}`,
+                        maxKwLen(kwargFlags) + 1
+                    )} - ${kw.description}`
+            ),
+        ];
+    }
+
+    public get verboseHelp(): string[] {
+        return [
+            `${this.commandNameForVerboseHelp} [kwargs?] ${this.arguments
+                .map(arghelp)
+                .join(' ')}\n${this.description}\n${this.kwargDescriptions.join(
+                '\n'
+            )}`,
+            ...flat(
+                Object.values(this.subcommands).map(sub => sub.verboseHelp)
+            ),
         ];
     }
 }

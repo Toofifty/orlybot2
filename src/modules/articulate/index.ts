@@ -117,14 +117,13 @@ Command.create('articulate', async message => {
 
             const active = users
                 .filter(user => {
-                    console.log(user.meta<number>('articulate_score'));
                     return user.meta<number>('articulate_score') > 0;
                 })
                 .map(user => ({
                     user,
                     score: user.meta<number>('articulate_score'),
                 }))
-                .sort((a, b) => (a.score < b.score ? 1 : 0));
+                .sort((a, b) => a.score - b.score);
 
             return `*Articulate! Leaderboard*\n${active
                 .map(

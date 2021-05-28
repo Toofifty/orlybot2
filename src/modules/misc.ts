@@ -1,48 +1,9 @@
-import { Command, registry } from 'core/commands';
+import { Command } from 'core/commands';
 import { pre, choose, randint, emoji } from 'core/util';
-import { flat } from 'core/util/array';
 
 Command.create('say', (_, args) => args.join(' '))
     .desc('Repeat after me')
     .arg({ name: '...text', required: true });
-
-Command.create('help', (_, args) => {
-    const search = args.join(' ');
-    return pre(
-        flat(
-            registry
-                .all()
-                .map(command => command.help)
-                .sort((a, b) => (a[0] > b[0] ? 1 : -1))
-                .filter(
-                    text =>
-                        search.length === 0 || text.join('').includes(search)
-                )
-        ).join('\n') || `Nothing found searching for "${search}"`
-    );
-})
-    .desc('Get some help')
-    .arg({ name: '...search' })
-    .alias('h');
-
-Command.create('help-aliases', (_, args) => {
-    const search = args.join(' ');
-    return pre(
-        flat(
-            registry
-                .all()
-                .map(command => command.helpWithAliases)
-                .sort((a, b) => (a[0] > b[0] ? 1 : -1))
-                .filter(
-                    text =>
-                        search.length === 0 || text.join('').includes(search)
-                )
-        ).join('\n') || `Nothing found searching for "${search}"`
-    );
-})
-    .desc('Get some help, and show command aliases')
-    .arg({ name: '...search' })
-    .alias('h');
 
 Command.create('roll', (message, [sides = '6']) => {
     const max = Number(sides);
@@ -66,6 +27,12 @@ Command.create('roll', (message, [sides = '6']) => {
 })
     .arg({ name: 'sides', def: '6' })
     .desc('Roll a dice');
+
+Command.create('good bot', () =>
+    choose(['Thanks :heart:', 'Cheers!', ':heart_eyes:', 'Thanks!'])
+)
+    .desc('Thank me')
+    .isPhrase();
 
 Command.create('bad bot', () =>
     choose([

@@ -5,6 +5,8 @@ import Channel from 'core/model/channel';
 import bot from 'core/bot';
 import { tokenize, split } from 'core/util';
 import BotMessage from './bot-message';
+import { logerror } from 'core/log';
+import Kwargs, { Match } from './kwargs';
 
 const CHANNEL_ALIAS_REGEX = /^<#(\w{9,11})(?:\|[\w-]+)?>:\s*/;
 const USER_ALIAS_REGEX = /^<@(\w{9})(?:\|[\w-]+)?>:\s*/;
@@ -124,6 +126,15 @@ export default class Message extends BaseModel {
     }
 
     /**
+     * Parse kwargs and remove them from the message's text
+     */
+    public parseKwargs(keywords: Match[], flags: Match[]): Kwargs {
+        const { kwargs, message } = Kwargs.parse(this.text, keywords, flags);
+        this.text = message;
+        return kwargs;
+    }
+
+    /**
      * Types that indicate the message was a user message.
      */
     private static userMessageTypes(): MessageType[] {
@@ -148,7 +159,14 @@ export default class Message extends BaseModel {
      * Reply directly to the message - in whatever context
      * the message was originally in (IM or channel).
      */
-    public async reply(text: string, attachments?: MessageAttachment[]) {
+    public async reply(
+        text: string | string[],
+        attachments?: MessageAttachment[]
+    ) {
+        if (Array.isArray(text)) {
+            text = text.join('\n');
+        }
+
         if (this.channel.isIm) return this.replyPrivately(text, attachments);
         return (
             await BotMessage.from(await this.channel.message(text, attachments))
@@ -197,19 +215,27 @@ export default class Message extends BaseModel {
     }
 
     public async addReaction(reaction: string) {
-        await bot._react({
-            name: reaction,
-            channel: this.channel.id,
-            timestamp: this.ts,
-        });
+        try {
+            await bot._react({
+                name: reaction,
+                channel: this.channel.id,
+                timestamp: this.ts,
+            });
+        } catch (e) {
+            logerror('addReaction error', (e as Error).message);
+        }
     }
 
     public async removeReaction(reaction: string) {
-        await bot._unreact({
-            name: reaction,
-            channel: this.channel.id,
-            timestamp: this.ts,
-        });
+        try {
+            await bot._unreact({
+                name: reaction,
+                channel: this.channel.id,
+                timestamp: this.ts,
+            });
+        } catch (e) {
+            logerror('addReaction error', (e as Error).message);
+        }
     }
 
     /**
