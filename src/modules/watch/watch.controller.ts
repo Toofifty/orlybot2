@@ -24,6 +24,7 @@ import WatchValidator from './watch.validator';
     "> Use the `watch` command to begin a watcher. When I see a message that contains your search terms, I'll make a post with a link to it and tag you.",
     "> To privately watch something, send me a direct message and I'll send responses there.",
     '> Regexes can also be used - just surround your search term with `/`s.',
+    "> *Note*: I can only watch channels I've been added to. Use `/invite @mathobot` to add me to a channel.",
     '*Extra flags*',
     "> If you'd instead like me to reply to the original message and mention someone, pass `-m|--mention` and a space-separated list of users to mention.",
     '> If you only want to be alerted once for a match, pass `-1|--once`',
@@ -72,14 +73,14 @@ export default class WatchController extends Controller {
         const watchers = store.watchers.filter(
             watcher => watcher.owner === message.user.id
         );
-        await message.reply(service.renderWatcherList(watchers));
+        await message.replyEphemeral(service.renderWatcherList(watchers));
     }
 
     @cmd('list-all', 'Shh')
     @admin
     @hidden
     async listAll(message: Message, store: WatchStore, service: WatchService) {
-        await message.reply(service.renderWatcherList(store.watchers));
+        await message.replyEphemeral(service.renderWatcherList(store.watchers));
     }
 
     @cmd('unwatch', 'Remove a watcher by ID')

@@ -1,8 +1,8 @@
 import { nanoid } from 'nanoid';
-import { injectable, Kwargs, loginfo, Message, User } from 'core';
+import { injectable, Kwargs, Message } from 'core';
 import bot from 'core/bot';
 import WatchStore, { Watcher } from './watch.store';
-import { extractId, pre, tag } from 'core/util';
+import { extractId, pre } from 'core/util';
 
 const listeners: Record<string, (message: Message) => void> = {};
 
@@ -12,14 +12,6 @@ export default class WatchService {
 
     startWatcher(watcher: Watcher) {
         const listener = (message: Message) => {
-            loginfo(
-                'test',
-                tag(message.text),
-                'against',
-                tag(watcher.search),
-                watcher.regex ? '(regex)' : ''
-            );
-
             if (this.matchesMessage(message, watcher)) {
                 this.alert(message, watcher);
 
@@ -56,7 +48,6 @@ export default class WatchService {
             commandMessage: message.serialize(),
             matches: 0,
             search,
-            regex: this.isRegex(search),
             once: kwargs.has('once'),
             mention: kwargs.get('mention'),
         };
@@ -81,7 +72,7 @@ export default class WatchService {
     }
 
     renderWatcherList(watchers: Watcher[]) {
-        if (watchers.length === 0) return "I couldn't find any.";
+        if (watchers.length === 0) return 'No watchers found.';
 
         return pre(
             watchers
@@ -115,7 +106,7 @@ export default class WatchService {
     private matchesMessage({ text, channel }: Message, watcher: Watcher) {
         if (channel.id !== extractId(watcher.channel)) return;
 
-        if (watcher.regex) {
+        if (this.isRegex(watcher.search)) {
             const [, pattern, flags] = watcher.search.split('/');
             return new RegExp(pattern, flags).test(text);
         }

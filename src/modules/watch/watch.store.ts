@@ -1,4 +1,4 @@
-import { Store, Channel, injectable, ID, SavedMessage } from 'core';
+import { Store, injectable, ID, SavedMessage } from 'core';
 
 export type Watcher = {
     id: ID;
@@ -7,7 +7,6 @@ export type Watcher = {
     commandMessage: SavedMessage;
     mention?: string;
     search: string;
-    regex: boolean;
     once: boolean;
     matches: number;
 };
