@@ -22,6 +22,12 @@ export const emoji = (str: string) => `:${str}:`;
 export const mention = (userId: string) => `<@${userId}>`;
 
 /**
+ * Extract ID out of a channel or user mention
+ */
+export const extractId = (text: string) =>
+    (text.match(/<[@#]([^|]+)(?:|\S+)?>/) ?? [])[1];
+
+/**
  * Get the emoji for a number (must be less than 10)
  */
 export const numberEmoji = (n: number) =>

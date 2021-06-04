@@ -4,6 +4,7 @@ import Container, { Constructable } from './di/container';
 import { Controller } from './controller';
 import { Meta, MetaKey } from './meta';
 import { StoredValidator, ArgumentValidator, CommandValidator } from './types';
+import bot from 'core/bot';
 
 const getMetaFactory = (target: Object, property?: string) => <T>(
     key: MetaKey
@@ -14,6 +15,14 @@ export const adapt = async <T extends Controller>(
 ): Promise<Command[]> => {
     const cls = await Container.resolve(controller);
     const meta = getMetaFactory(cls);
+
+    const setupFn = meta<string>(Meta.GROUP_SETUP);
+
+    if (setupFn) {
+        bot.ready(() => {
+            Container.execute(cls, setupFn);
+        });
+    }
 
     const group = meta<string>(Meta.COMMAND_GROUP);
     const main = meta<string>(Meta.MAIN_COMMAND_METHOD);

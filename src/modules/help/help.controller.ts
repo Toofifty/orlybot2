@@ -12,8 +12,6 @@ export default class HelpController extends Controller {
         kwargs: Kwargs,
         search?: string
     ) {
-        console.log(kwargs);
-
         if (search) {
             const helpText = kwargs.has('verbose')
                 ? service.getVerboseHelpText(search)

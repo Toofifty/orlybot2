@@ -200,6 +200,20 @@ export default class Message extends BaseModel {
         });
     }
 
+    public async replyInThread(text: string) {
+        return (
+            await BotMessage.from(
+                await bot._message({
+                    thread_ts: this.ts,
+                    channel: this.channel.id,
+                    text,
+                })
+            )
+        ).set({
+            parent: this,
+        });
+    }
+
     /**
      * Show a user error (ephemeral) to the user.
      */
@@ -235,6 +249,20 @@ export default class Message extends BaseModel {
             });
         } catch (e) {
             logerror('addReaction error', (e as Error).message);
+        }
+    }
+
+    public async getPermalink() {
+        try {
+            return (
+                await bot._getPermalink({
+                    channel: this.channel.id,
+                    message_ts: this.ts,
+                })
+            ).permalink as string;
+        } catch (e) {
+            logerror('getPermalink error', (e as Error).message);
+            return '';
         }
     }
 

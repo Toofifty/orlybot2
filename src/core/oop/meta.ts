@@ -6,6 +6,7 @@ const keys = {
     GROUP_AFTER: 'bot:group_after',
     GROUP_DELEGATES: 'bot:group_delegates',
     GROUP_DESCRIPTION: 'bot:group_description',
+    GROUP_SETUP: 'bot:group_setup',
 
     MAIN_COMMAND_METHOD: 'bot:main_command_method',
     SUB_COMMANDS: 'bot:sub_commands',

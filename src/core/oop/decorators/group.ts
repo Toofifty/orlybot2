@@ -45,3 +45,10 @@ export const delegate = (
         Meta.set(Meta.GROUP_DELEGATES, delegates, target.prototype);
     };
 };
+
+/**
+ * Run a method when the bot is initialised
+ */
+export const setup: MethodDecorator = (target, property) => {
+    Meta.set(Meta.GROUP_SETUP, property, target);
+};

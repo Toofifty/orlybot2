@@ -97,7 +97,7 @@ export default class Kwargs {
     /**
      * Get a keyword arg
      */
-    public get(key: string) {
+    public get(key: string): string | undefined {
         return this.args[key];
     }
 
