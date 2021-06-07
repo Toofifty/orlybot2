@@ -53,7 +53,6 @@ export default class Gpt3PromptService {
                 } else {
                     preparedText = `${preparedText} ${input}`;
                 }
-                console.log(preparedText);
             });
         }
 

@@ -2,7 +2,7 @@ import Channel from 'core/model/channel';
 import Message from 'core/model/message';
 import User from 'core/model/user';
 import Container from 'core/oop/di/container';
-import { logerror, loginfo } from 'core/log';
+import { logdebug, logerror, loginfo } from 'core/log';
 import UserError from './user-error';
 import Command from './command';
 import registry from './registry';
@@ -41,7 +41,11 @@ export default class CommandRunner {
     private static async handleSingle(message: Message) {
         const runner = new CommandRunner(message);
         runner.resolveCommand();
-        if (runner.isNoOp) return;
+
+        if (runner.isNoOp) {
+            logdebug('No matching command.');
+            return;
+        }
 
         await runner.execute();
     }
@@ -49,7 +53,11 @@ export default class CommandRunner {
     public static async run(command: string, message: Message) {
         const runner = new CommandRunner(await message.clone());
         runner.forceCommand(command);
-        if (runner.isNoOp) return;
+        logdebug('No matching command.');
+        if (runner.isNoOp) {
+            logdebug('No matching command.');
+            return;
+        }
 
         await runner.execute();
     }
@@ -67,6 +75,7 @@ export default class CommandRunner {
      *      test defined in the Command class.
      */
     public resolveCommand() {
+        logdebug('Testing:', this.message.tokens);
         this.command = registry.find(
             this.message.firstToken.toLowerCase(),
             this.message

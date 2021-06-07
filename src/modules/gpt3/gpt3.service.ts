@@ -32,8 +32,6 @@ export default class Gpt3Service {
             }),
         }).then(res => res.json());
 
-        console.log(res);
-
         return res.choices[0].text;
     }
 
@@ -51,23 +49,20 @@ export default class Gpt3Service {
     }
 
     getParameters() {
+        const arg = (key: string) => this.kwargs.get(key) ?? '';
+
         return {
             ...DEFAULT_PARAMETERS,
-            temperature:
-                +this.kwargs.get('temperature') ||
-                DEFAULT_PARAMETERS.temperature,
-            max_tokens:
-                +this.kwargs.get('max_tokens') || DEFAULT_PARAMETERS.max_tokens,
-            top_p: +this.kwargs.get('top_p') || DEFAULT_PARAMETERS.top_p,
+            temperature: +arg('temperature') || DEFAULT_PARAMETERS.temperature,
+            max_tokens: +arg('max_tokens') || DEFAULT_PARAMETERS.max_tokens,
+            top_p: +arg('top_p') || DEFAULT_PARAMETERS.top_p,
             frequency_penalty:
-                +this.kwargs.get('frequency_penalty') ||
+                +arg('frequency_penalty') ||
                 DEFAULT_PARAMETERS.frequency_penalty,
             presence_penalty:
-                +this.kwargs.get('presence_penalty') ||
+                +arg('presence_penalty') ||
                 DEFAULT_PARAMETERS.frequency_penalty,
-            stop: this.kwargs.get('stop')
-                ? tokenize(this.kwargs.get('stop'))
-                : DEFAULT_PARAMETERS.stop,
+            stop: arg('stop') ? tokenize(arg('stop')) : DEFAULT_PARAMETERS.stop,
         };
     }
 }

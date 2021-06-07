@@ -10,6 +10,7 @@ import {
     PinsAddArguments,
     PinsRemoveArguments,
     ReactionsRemoveArguments,
+    ChatGetPermalinkArguments,
 } from '@slack/web-api';
 import { loginfo, logdebug, logerror } from './log';
 import User from 'core/model/user';
@@ -67,15 +68,27 @@ class Bot {
             });
     }
 
-    private async registerMessageListener(): Promise<void> {
-        this.rtm.on('message', async data => {
+    public async onMessage(callback: (message: Message) => void) {
+        const wrappedCallback = async (data: any) => {
             if (!data) return;
             const message = await Message.from(data);
             if (!message.isUserMessage) return;
             loginfo(message.toString());
+            callback(message);
+        };
+        this.eventCallbacks.set(callback, wrappedCallback);
+        this.rtm.on('message', wrappedCallback);
+    }
 
-            CommandRunner.handle(message);
-        });
+    public async offMessage(callback: (message: Message) => void) {
+        const memoCallback = this.eventCallbacks.get(callback);
+        if (memoCallback) {
+            this.rtm.off('message', memoCallback as any);
+        }
+    }
+
+    private async registerMessageListener(): Promise<void> {
+        this.onMessage(message => CommandRunner.handle(message));
     }
 
     /**
@@ -95,6 +108,10 @@ class Bot {
             }
         } catch {}
         return await this.web.chat.postMessage(options);
+    }
+
+    public async _getPermalink(options: ChatGetPermalinkArguments) {
+        return this.web.chat.getPermalink(options);
     }
 
     /**

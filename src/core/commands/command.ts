@@ -381,7 +381,11 @@ export default class Command {
             ]
                 .filter(Boolean)
                 .join(' '),
-            ...flat(Object.values(this.subcommands).map(sub => sub.help)),
+            ...flat(
+                Object.values(this.subcommands)
+                    .filter(cmd => !cmd.hidden)
+                    .map(sub => sub.help)
+            ),
         ];
     }
 
@@ -419,7 +423,9 @@ export default class Command {
                 '\n'
             )}`,
             ...flat(
-                Object.values(this.subcommands).map(sub => sub.verboseHelp)
+                Object.values(this.subcommands)
+                    .filter(cmd => !cmd.hidden)
+                    .map(sub => sub.verboseHelp)
             ),
         ];
     }
