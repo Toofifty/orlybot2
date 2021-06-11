@@ -72,8 +72,7 @@ class Bot {
         const wrappedCallback = async (data: any) => {
             if (!data) return;
             const message = await Message.from(data);
-            if (!message.isUserMessage) return;
-            loginfo(message.toString());
+            if (!message.isValidMessage) return;
             callback(message);
         };
         this.eventCallbacks.set(callback, wrappedCallback);
@@ -88,7 +87,12 @@ class Bot {
     }
 
     private async registerMessageListener(): Promise<void> {
-        this.onMessage(message => CommandRunner.handle(message));
+        this.onMessage(message => {
+            if (message.isUserMessage) {
+                loginfo(message.toString());
+                CommandRunner.handle(message);
+            }
+        });
     }
 
     /**

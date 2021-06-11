@@ -19,6 +19,8 @@ enum MessageSubtype {
     GROUP_JOIN = 'group_join',
 }
 
+type Attachment = { fallback: string; text: string; pretext: string };
+
 /**
  * Serialised message for database storage.
  */
@@ -79,6 +81,8 @@ export default class Message extends BaseModel {
 
     public ts: string;
 
+    public attachments?: Attachment[];
+
     /**
      * Untouched text, even after aliased users/channels are
      * removed.
@@ -90,17 +94,19 @@ export default class Message extends BaseModel {
     }
 
     protected async finalise(data: any) {
-        if (!this.user) return this;
-        // prevent re-finalising for sub-messages
-        if (this.user.isModel)
-            throw new Error('Tried to create model from another');
-
-        this.user = await User.find(data.originalUser ?? data.user);
         this.channel = await Channel.find(data.originalChannel ?? data.channel);
         this.time = new Date(
             typeof data.ts === 'string' ? data.ts.split('.')[0] * 1000 : data.ts
         );
         this.originalText = this.text;
+
+        if (!this.user) return this;
+
+        // prevent re-finalising for sub-messages
+        if (this.user.isModel)
+            throw new Error('Tried to create model from another');
+
+        this.user = await User.find(data.originalUser ?? data.user);
 
         if (CHANNEL_ALIAS_REGEX.test(this.originalText)) {
             if (!this.user.isAdmin) {
@@ -146,9 +152,18 @@ export default class Message extends BaseModel {
      * it is the correct type and it was not posted by
      * this bot or Slackbot.
      */
+    public get isValidMessage(): boolean {
+        return Message.userMessageTypes().includes(this.type);
+    }
+
+    /**
+     * Check if this message is a user message, meaning
+     * it is the correct type and it was not posted by
+     * this bot or Slackbot.
+     */
     public get isUserMessage(): boolean {
         return (
-            Message.userMessageTypes().includes(this.type) &&
+            this.isValidMessage &&
             !this.subtype &&
             this.user.id !== 'USLACKBOT' &&
             this.user.id !== bot.id

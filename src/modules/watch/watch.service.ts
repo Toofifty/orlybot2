@@ -103,9 +103,27 @@ export default class WatchService {
         ]);
     }
 
-    private matchesMessage({ text, channel }: Message, watcher: Watcher) {
+    private matchesMessage(
+        { text, channel, attachments }: Message,
+        watcher: Watcher
+    ) {
         if (channel.id !== extractId(watcher.channel)) return;
 
+        // since the message could be a message edit - it won't
+        // contain text, only a previous message object.
+        // this'll just ignore edits
+        if (!text) return false;
+
+        const checkTexts = [text];
+
+        attachments?.forEach(({ fallback, text, pretext }) => {
+            checkTexts.push(fallback, text, pretext);
+        });
+
+        return checkTexts.some(t => this.matchesText(t, watcher));
+    }
+
+    private matchesText(text: string, watcher: Watcher) {
         if (this.isRegex(watcher.search)) {
             const [, pattern, flags] = watcher.search.split('/');
             return new RegExp(pattern, flags).test(text);
