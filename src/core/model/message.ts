@@ -153,7 +153,10 @@ export default class Message extends BaseModel {
      * this bot or Slackbot.
      */
     public get isValidMessage(): boolean {
-        return Message.userMessageTypes().includes(this.type);
+        return (
+            Message.userMessageTypes().includes(this.type) &&
+            (this as any).bot_profile?.name !== 'mathobot'
+        );
     }
 
     /**
