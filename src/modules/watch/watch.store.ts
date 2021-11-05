@@ -8,6 +8,7 @@ export type Watcher = {
     mention?: string;
     search: string;
     once: boolean;
+    silent: boolean;
     matches: number;
 };
 

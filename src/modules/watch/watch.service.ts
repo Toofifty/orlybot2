@@ -50,6 +50,7 @@ export default class WatchService {
             search,
             once: kwargs.has('once'),
             mention: kwargs.get('mention'),
+            silent: kwargs.has('silent'),
         };
 
         this.store.watchers.push(watcher);
@@ -97,10 +98,17 @@ export default class WatchService {
         const commandMessage = await Message.from(watcher.commandMessage);
         const permalink = await message.getPermalink();
 
-        commandMessage.reply([
-            `I found a match for \`${watcher.search}\` in ${watcher.channel}`,
-            permalink,
-        ]);
+        const reply: string[] = [];
+
+        if (!watcher.silent) {
+            reply.push(
+                `I found a match for \`${watcher.search}\` in ${watcher.channel}`
+            );
+        }
+
+        reply.push(permalink);
+
+        commandMessage.reply(reply);
     }
 
     private matchesMessage(

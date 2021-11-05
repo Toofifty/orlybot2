@@ -48,6 +48,7 @@ export default class WatchController extends Controller {
         'Mention users as a reply to the matched message, rather than make a new post'
     )
     @flag(['once', '1'], 'Only alert once on match')
+    @flag(['silent', 's'], 'Be quiet! Only post the link, no other text')
     async watch(
         message: Message,
         kwargs: Kwargs,
