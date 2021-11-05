@@ -106,9 +106,7 @@ export default class WatchService {
             );
         }
 
-        reply.push(permalink);
-
-        commandMessage.reply(reply);
+        commandMessage.reply([...reply, permalink]);
     }
 
     private matchesMessage(

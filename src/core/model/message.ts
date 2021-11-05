@@ -155,7 +155,9 @@ export default class Message extends BaseModel {
     public get isValidMessage(): boolean {
         return (
             Message.userMessageTypes().includes(this.type) &&
-            (this as any).bot_profile?.name !== 'mathobot'
+            (this as any).bot_profile?.id !== bot.id &&
+            (this as any).bot_profile?.name !== bot.name &&
+            (this as any).bot_profile?.name !== process.env.SLACK_NAME
         );
     }
 
