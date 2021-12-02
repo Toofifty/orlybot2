@@ -6,7 +6,7 @@ import 'core/bootstrap';
 
 import 'modules/articulate';
 import 'modules/cleverbot';
-import 'modules/countdown';
+import CountdownController from 'modules/countdown';
 import 'modules/crossword';
 import 'modules/debug';
 import 'modules/dungeon';
@@ -24,6 +24,7 @@ import Gpt3Controller from 'modules/gpt3';
 import WatchController from 'modules/watch';
 import { register } from 'core';
 
+register(CountdownController);
 register(JokesController);
 register(TriviaController);
 register(HelpController);

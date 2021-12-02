@@ -75,7 +75,6 @@ export default class TriviaController extends Controller {
 
     @cmd('cancel', 'Cancel broken trivia')
     @aliases('stop')
-    @validate(TriviaValidator, 'gameRunning')
     async cancel(message: Message, store: TriviaStore, service: TriviaService) {
         service.endTrivia(message, store);
         message.reply('Trivia cancelled :(');
