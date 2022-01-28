@@ -22,6 +22,7 @@ import TriviaController from 'modules/trivia';
 import HelpController from 'modules/help';
 import Gpt3Controller from 'modules/gpt3';
 import WatchController from 'modules/watch';
+import WordleController from 'modules/wordle';
 import { register } from 'core';
 
 register(JokesController);
@@ -32,3 +33,4 @@ if (process.env.OPENAI_API_KEY) {
     register(Gpt3Controller);
 }
 register(WatchController);
+register(WordleController);
