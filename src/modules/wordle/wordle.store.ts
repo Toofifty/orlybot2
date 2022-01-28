@@ -3,8 +3,8 @@ import { Channel, injectable, Store } from 'core';
 export enum LetterResult {
     Correct = 'large_green_square',
     WrongPosition = 'large_yellow_square',
-    WrongLetter = 'white_square',
-    Empty = 'black_square',
+    WrongLetter = 'black_square',
+    Empty = 'white_square',
 }
 
 type Guess = {
