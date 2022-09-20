@@ -23,6 +23,7 @@ import HelpController from 'modules/help';
 import Gpt3Controller from 'modules/gpt3';
 import WatchController from 'modules/watch';
 import WordleController from 'modules/wordle';
+import SimpsonsController from 'modules/simpsons';
 import { register } from 'core';
 
 register(JokesController);
@@ -34,3 +35,4 @@ if (process.env.OPENAI_API_KEY) {
 }
 register(WatchController);
 register(WordleController);
+register(SimpsonsController);
