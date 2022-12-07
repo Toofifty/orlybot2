@@ -24,6 +24,7 @@ import Gpt3Controller from 'modules/gpt3';
 import WatchController from 'modules/watch';
 import WordleController from 'modules/wordle';
 import SimpsonsController from 'modules/simpsons';
+import ChatGPTController from 'modules/chatgpt';
 import { register } from 'core';
 
 register(JokesController);
@@ -36,3 +37,7 @@ if (process.env.OPENAI_API_KEY) {
 register(WatchController);
 register(WordleController);
 register(SimpsonsController);
+
+if (process.env.CHATGPT_SESSION_TOKEN) {
+    register(ChatGPTController);
+}

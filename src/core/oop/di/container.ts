@@ -24,6 +24,8 @@ class ContainerClass {
             await (constructed as any).init();
         }
 
+        this.singleton(service, constructed);
+
         return constructed;
     }
 
