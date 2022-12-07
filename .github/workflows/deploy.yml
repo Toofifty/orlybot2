@@ -13,13 +13,13 @@ jobs:
     - name: Setup Node
       uses: actions/setup-node@v1
       with:
-        node-version: '14'
+        node-version: 16.x
     - name: Install dependencies
-      uses: borales/actions-yarn@v2.0.0
+      uses: borales/actions-yarn@v4
       with:
         cmd: install --force
     - name: Build project
-      uses: borales/actions-yarn@v2.0.0
+      uses: borales/actions-yarn@v4
       with:
         cmd: build
     - name: Upload artifacts
