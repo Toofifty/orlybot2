@@ -1,7 +1,7 @@
 import { MessageAttachment } from '@slack/web-api';
 import bot from 'core/bot';
 import { camel } from 'core/util';
-import { ID } from 'core/model/types';
+import { ID, MessageOptions } from 'core/model/types';
 import DbModel from 'core/model/db-model';
 import db from 'core/db';
 import { loginfo } from 'core/log';
@@ -67,9 +67,13 @@ export default class Channel extends DbModel {
     /**
      * Send a regular message to the channel.
      */
-    public message(text: string, attachments?: MessageAttachment[]) {
+    public message(
+        text: string,
+        { attachments, threadTs }: MessageOptions = {}
+    ) {
         return bot._message({
             channel: this.id,
+            thread_ts: threadTs,
             as_user: true,
             text,
             attachments,
@@ -79,12 +83,17 @@ export default class Channel extends DbModel {
     /**
      * Send an ephemeral message to the channel and user.
      */
-    public ephemeral(userId: string, text: string) {
+    public ephemeral(
+        userId: string,
+        text: string,
+        { attachments }: MessageOptions = {}
+    ) {
         return bot._ephemeral({
             channel: this.id,
             user: userId,
             as_user: true,
             text,
+            attachments,
         });
     }
 }

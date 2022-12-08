@@ -7,6 +7,7 @@ import { tokenize, split } from 'core/util';
 import BotMessage from './bot-message';
 import { logerror } from 'core/log';
 import Kwargs, { Match } from './kwargs';
+import { MessageOptions } from './types';
 
 const CHANNEL_ALIAS_REGEX = /^<#(\w{9,11})(?:\|[\w-]+)?>:\s*/;
 const USER_ALIAS_REGEX = /^<@(\w{9})(?:\|[\w-]+)?>:\s*/;
@@ -79,6 +80,8 @@ export default class Message extends BaseModel {
 
     public time: Date;
 
+    public threadTs?: string;
+
     public ts: string;
 
     public attachments?: Attachment[];
@@ -99,6 +102,7 @@ export default class Message extends BaseModel {
             typeof data.ts === 'string' ? data.ts.split('.')[0] * 1000 : data.ts
         );
         this.originalText = this.text;
+        this.threadTs = data.thread_ts;
 
         if (!this.user) return this;
 
@@ -179,17 +183,19 @@ export default class Message extends BaseModel {
      * Reply directly to the message - in whatever context
      * the message was originally in (IM or channel).
      */
-    public async reply(
-        text: string | string[],
-        attachments?: MessageAttachment[]
-    ) {
+    public async reply(text: string | string[], opts: MessageOptions = {}) {
         if (Array.isArray(text)) {
             text = text.join('\n');
         }
 
-        if (this.channel.isIm) return this.replyPrivately(text, attachments);
+        if (this.threadTs) opts.threadTs = this.threadTs;
+
+        if (this.channel.isIm) {
+            return this.replyPrivately(text, opts);
+        }
+
         return (
-            await BotMessage.from(await this.channel.message(text, attachments))
+            await BotMessage.from(await this.channel.message(text, opts))
         ).set({
             parent: this,
         });
@@ -198,10 +204,10 @@ export default class Message extends BaseModel {
     /**
      * Reply ephemerally to the message.
      */
-    public async replyEphemeral(text: string) {
+    public async replyEphemeral(text: string, opts: MessageOptions = {}) {
         return (
             await BotMessage.from(
-                await this.channel.ephemeral(this.user.id, text)
+                await this.channel.ephemeral(this.user.id, text, opts)
             )
         ).set({ parent: this });
     }
@@ -209,18 +215,13 @@ export default class Message extends BaseModel {
     /**
      * Reply to the message in an IM.
      */
-    public async replyPrivately(
-        text: string,
-        attachments?: MessageAttachment[]
-    ) {
+    public async replyPrivately(text: string, opts: MessageOptions = {}) {
         return (
-            await BotMessage.from(await this.user.message(text, attachments))
-        ).set({
-            parent: this,
-        });
+            await BotMessage.from(await this.user.message(text, opts))
+        ).set({ parent: this });
     }
 
-    public async replyInThread(text: string) {
+    public async replyInThread(text: string, opts: MessageOptions = {}) {
         return (
             await BotMessage.from(
                 await bot._message({
@@ -229,9 +230,7 @@ export default class Message extends BaseModel {
                     text,
                 })
             )
-        ).set({
-            parent: this,
-        });
+        ).set({ parent: this });
     }
 
     /**

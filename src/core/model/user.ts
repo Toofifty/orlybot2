@@ -1,7 +1,7 @@
 import { MessageAttachment } from '@slack/web-api';
 import bot from 'core/bot';
 import { camel } from 'core/util';
-import { ID } from 'core/model/types';
+import { ID, MessageOptions } from 'core/model/types';
 import DbModel from 'core/model/db-model';
 import db from 'core/db';
 import { loginfo } from 'core/log';
@@ -138,9 +138,13 @@ export default class User extends DbModel {
     /**
      * Send a direct message to the user.
      */
-    public message(text: string, attachments?: MessageAttachment[]) {
+    public message(
+        text: string,
+        { attachments, threadTs }: MessageOptions = {}
+    ) {
         return bot._message({
             channel: this.id,
+            thread_ts: threadTs,
             as_user: true,
             text,
             attachments,
