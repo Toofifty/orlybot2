@@ -2,8 +2,6 @@ import {
     after,
     aliases,
     before,
-    Channel,
-    cmd,
     Controller,
     group,
     maincmd,
@@ -23,29 +21,28 @@ export default class ChatGPTController extends Controller {
         await message.removeReaction('thinking_face');
     }
 
-    @maincmd('Begin a new conversation with ChatGPT')
+    @maincmd(
+        'Begin a conversation with ChatGPT. To continue the conversation, reply to @mathobot in a thread.'
+    )
     @aliases('~')
-    async single(
+    async message(
         message: Message,
-        channel: Channel,
         chatGPTService: ChatGPTService,
         ...text: string[]
     ) {
-        message.reply(
-            await chatGPTService.singleMessage(channel, text.join(' '))
-        );
-    }
+        const {
+            sendMessageInConversation,
+            response,
+        } = await chatGPTService.sendMessage(text.join(' '));
 
-    @cmd('conversation', 'Continue the latest conversation with ChatGPT')
-    @aliases('&gt;')
-    async conversation(
-        message: Message,
-        channel: Channel,
-        chatGPTService: ChatGPTService,
-        ...text: string[]
-    ) {
-        message.reply(
-            await chatGPTService.conversationMessage(channel, text.join(' '))
-        );
+        const botMessage = await message.reply(response);
+
+        botMessage.onReply(async reply => {
+            reply.addReaction('thinking_face');
+            botMessage.replyInThread(
+                await sendMessageInConversation(reply.text)
+            );
+            reply.removeReaction('thinking_face');
+        });
     }
 }

@@ -20,6 +20,7 @@ export type SavedBotMessage = {
 
 export default class BotMessage extends BaseModel {
     public ts: string;
+    public threadTs?: string;
     public text: string;
     public ok: boolean;
     public parent: Message;
@@ -32,6 +33,10 @@ export default class BotMessage extends BaseModel {
     protected async finalise(data: any) {
         if (data.parent) {
             this.parent = await Message.from(data.parent);
+        }
+
+        if (data.thread_ts) {
+            this.threadTs = data.thread_ts;
         }
 
         return this;
@@ -84,6 +89,17 @@ export default class BotMessage extends BaseModel {
                 data.reaction === reaction
             ) {
                 callback(data);
+            }
+        });
+    }
+
+    public onReply(callback: (message: Message) => void) {
+        bot.onMessage(async message => {
+            if (
+                [this.ts, this.threadTs].includes(message.threadTs) &&
+                message.isUserMessage
+            ) {
+                callback(message);
             }
         });
     }
