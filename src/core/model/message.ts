@@ -11,6 +11,7 @@ import { MessageOptions } from './types';
 
 const CHANNEL_ALIAS_REGEX = /^<#(\w{9,11})(?:\|[\w-]+)?>:\s*/;
 const USER_ALIAS_REGEX = /^<@(\w{9})(?:\|[\w-]+)?>:\s*/;
+const REPLY_THREAD_REGEX = /^&gt;\s*/;
 
 enum MessageType {
     MESSAGE = 'message',
@@ -86,6 +87,8 @@ export default class Message extends BaseModel {
 
     public attachments?: Attachment[];
 
+    public threadedReply?: boolean;
+
     /**
      * Untouched text, even after aliased users/channels are
      * removed.
@@ -130,6 +133,11 @@ export default class Message extends BaseModel {
             const [match, userId] = this.text.match(USER_ALIAS_REGEX)!;
             this.aliasedUser = await User.find(userId);
             this.text = this.text.replace(match, '');
+        }
+
+        if (REPLY_THREAD_REGEX.test(this.originalText)) {
+            this.text = this.text.replace(REPLY_THREAD_REGEX, '');
+            this.threadedReply = true;
         }
 
         return this;
@@ -188,7 +196,13 @@ export default class Message extends BaseModel {
             text = text.join('\n');
         }
 
-        if (this.threadTs) opts.threadTs = this.threadTs;
+        if (this.threadedReply) {
+            opts.threadTs = this.ts;
+        }
+
+        if (this.threadTs) {
+            opts.threadTs = this.threadTs;
+        }
 
         if (this.channel.isIm) {
             return this.replyPrivately(text, opts);

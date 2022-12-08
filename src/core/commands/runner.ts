@@ -2,11 +2,10 @@ import Channel from 'core/model/channel';
 import Message from 'core/model/message';
 import User from 'core/model/user';
 import Container from 'core/oop/di/container';
-import { logdebug, logerror, loginfo } from 'core/log';
+import { logdebug, logerror } from 'core/log';
 import UserError from './user-error';
 import Command from './command';
 import registry from './registry';
-import Kwargs from 'core/model/kwargs';
 
 /**
  *
@@ -43,7 +42,6 @@ export default class CommandRunner {
         runner.resolveCommand();
 
         if (runner.isNoOp) {
-            logdebug('No matching command.');
             return;
         }
 
@@ -53,9 +51,7 @@ export default class CommandRunner {
     public static async run(command: string, message: Message) {
         const runner = new CommandRunner(await message.clone());
         runner.forceCommand(command);
-        logdebug('No matching command.');
         if (runner.isNoOp) {
-            logdebug('No matching command.');
             return;
         }
 
@@ -75,7 +71,6 @@ export default class CommandRunner {
      *      test defined in the Command class.
      */
     public resolveCommand() {
-        logdebug('Testing:', this.message.tokens);
         this.command = registry.find(
             this.message.firstToken.toLowerCase(),
             this.message
@@ -100,8 +95,6 @@ export default class CommandRunner {
      * Will also print out any uncaught errors to the user.
      */
     public async execute(): Promise<void> {
-        loginfo(`Preparing command [${this.command.keywords}]`);
-
         Container.singleton(Message, this.message);
         Container.singleton(Channel, this.message.channel);
         Container.singleton(User, this.message.user);
