@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "start": "node --experimental-specifier-resolution=node --loader ./loader.js dist/index.js",
     "bot": "nodemon -e ts -w src -x 'yarn build && yarn start'"
   },
