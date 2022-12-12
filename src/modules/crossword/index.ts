@@ -1,4 +1,3 @@
-import he from 'he';
 import fetch from 'node-fetch';
 import { Command } from 'core/commands';
 import { pre, mention } from 'core/util';

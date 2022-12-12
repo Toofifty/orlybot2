@@ -10,7 +10,8 @@
         "target": "ESNext",
         "typeRoots": ["node_modules/@types"],
         "lib": ["es2017", "dom"],
-        "baseUrl": "src/",
+        "baseUrl": "./src",
+        "rootDir": "./src",
         "outDir": "dist",
         "module": "ESNext",
         "allowJs": true,
@@ -28,6 +29,7 @@
     ],
     "exclude": ["node_modules"],
     "ts-node": {
+        "esm": true,
         "require": ["tsconfig-paths/register"]
     }
 }

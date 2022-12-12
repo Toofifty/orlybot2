@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import 'dotenv/config.js';
 
-import 'core/bot.js';
+import 'core/bot';
 import 'core/bootstrap';
 
 import 'modules/articulate';

@@ -1,6 +1,18 @@
+import chalk from 'chalk';
+
+const levelColor = {
+    info: 'white',
+    debug: 'blue',
+    warn: 'yellow',
+    error: 'red',
+};
+
+const time = () => `[${chalk.white(new Date().toISOString())}]`;
+const type = (level: string) => `[${chalk[levelColor[level]](level)}]`;
+
 const createLogger = (level: string) => (...message: any[]) =>
     (console[level] ?? console.log)(
-        `[${new Date().toISOString()}][bot:${level}]`,
+        chalk.gray(`${time()}${type(level)}`),
         ...message
     );
 
