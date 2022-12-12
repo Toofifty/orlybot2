@@ -9,6 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
     - name: Deploy files
       uses: appleboy/scp-action@v0.0.6
       with:
