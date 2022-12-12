@@ -6,7 +6,6 @@ import Message from 'core/model/message';
 import { load, update } from './data';
 import { CrosswordData } from './types';
 import { render, renderAcross, renderDown } from './render';
-import { writeFileSync } from 'fs';
 
 /**
  * Plan
@@ -242,7 +241,7 @@ Command.create('crossword', async (message, [n, dir, word]) => {
             message.replyEphemeral('Fetching NYT crossword, hold on...');
 
             const data: CrosswordData = await fetch(
-                `https://www.xwordinfo.com/JSON/Data.aspx?date=random&dow=${dow}`,
+                `https://www.xwordinfo.com/JSON/Data.ashx?format=text&date=random&dow=${dow}`,
                 {
                     headers: {
                         Referer: 'https://www.xwordinfo.com/JSON/Sample2',
