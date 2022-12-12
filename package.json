@@ -22,7 +22,7 @@
     "dotenv": "^8.2.0",
     "he": "^1.2.0",
     "nanoid": "^3.1.23",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.7",
     "pouchdb-node": "^7.1.1",
     "reflect-metadata": "^0.1.13"
   },
