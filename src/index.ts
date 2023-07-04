@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import './fetch-polyfill';
 import 'dotenv/config.js';
 
 import 'core/bot';

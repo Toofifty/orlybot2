@@ -34,12 +34,19 @@ Command.create('good bot', () =>
     .desc('Thank me')
     .isPhrase();
 
-Command.create('bad bot', () =>
+Command.create('bad bot', message =>
     choose([
         "I'm doing the best I can :(",
         'bad human',
         "I'm sorry :cry:",
-        "I'm trying my best! Please visit this link to provide feedback: https://l.matho.me/mathobot/",
+        "I'm not even sorry",
+        "I didn't understand that, can you please try again",
+        'Why are you doing this to me?',
+        'Why are you like this?',
+        'Does it make you feel happy to insult a robot?',
+        "Don't you have anything better to do?",
+        'Stop yelling at a robot and get back to work, mate.',
+        `bad ${message.user.tag}`,
     ])
 )
     .desc('Boost your ego by yelling at a poor defenceless bot')
@@ -47,11 +54,11 @@ Command.create('bad bot', () =>
 
 Command.create('stupid bot', () =>
     choose([
-        "I'm trying my best! Please visit this link to provide feedback: https://l.matho.me/mathobot/",
         'stupid human',
         "I didn't understand that, can you please try again",
         'Says you',
         "I'd like to see you do better",
+        'I know you are but what am I?',
     ])
 )
     .desc("Pretend you're smarter than me")

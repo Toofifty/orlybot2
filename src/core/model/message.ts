@@ -10,7 +10,7 @@ import Kwargs, { Match } from './kwargs';
 import { MessageOptions } from './types';
 
 const CHANNEL_ALIAS_REGEX = /^<#(\w{9,11})(?:\|[\w-]*)?>:\s*/;
-const USER_ALIAS_REGEX = /^<@(\w{9})(?:\|[\w-]*)?>:\s*/;
+const USER_ALIAS_REGEX = /^<@(\w{9,11})(?:\|[\w-]*)?>:\s*/;
 const REPLY_THREAD_REGEX = /^&gt;\s*/;
 
 enum MessageType {

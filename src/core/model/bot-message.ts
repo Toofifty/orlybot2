@@ -96,6 +96,7 @@ export default class BotMessage extends BaseModel {
     public onReply(callback: (message: Message) => void) {
         bot.onMessage(async message => {
             if (
+                message.threadTs &&
                 [this.ts, this.threadTs].includes(message.threadTs) &&
                 message.isUserMessage
             ) {

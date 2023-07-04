@@ -1,5 +1,4 @@
 import {
-    admin,
     after,
     aliases,
     before,
@@ -33,40 +32,18 @@ export default class ChatGPTController extends Controller {
         chatGPTService: ChatGPTService,
         ...text: string[]
     ) {
-        const {
-            sendMessageInConversation,
-            response,
-        } = await chatGPTService.sendMessage(
+        const response = await chatGPTService.sendMessage(
+            message.user,
             text.join(' '),
             once(() => message.addReaction('robot_face'))
         );
 
         const botMessage = await message.reply(response);
-
-        botMessage.onReply(async reply => {
-            reply.addReaction('thinking_face');
-            botMessage.replyInThread(
-                await sendMessageInConversation(
-                    reply.text,
-                    once(() => reply.addReaction('robot_face'))
-                )
-            );
-            reply.removeReaction('thinking_face');
-        });
     }
 
-    @cmd('refresh-token', 'Provide a new session token')
-    @admin
-    async refreshToken(
-        message: Message,
-        chatGPTService: ChatGPTService,
-        token: string
-    ) {
-        try {
-            await chatGPTService.refreshToken(token);
-            message.replyEphemeral('Token updated');
-        } catch {
-            message.replyEphemeral('Failed to update token');
-        }
+    @cmd('clear', 'Clear the conversation history')
+    async clear(message: Message, chatGPTService: ChatGPTService) {
+        await chatGPTService.clearConversation();
+        await message.reply(':robot_face: Conversation cleared');
     }
 }
